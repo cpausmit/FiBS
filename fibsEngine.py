@@ -5,7 +5,7 @@
 #
 #                                                                        v0 - April 1, 2016 - C.Paus
 #---------------------------------------------------------------------------------------------------
-import os,sys,getopt,re,ConfigParser,time
+import os,sys,getopt,re,ConfigParser,time,socket
 import dblock
 
 #===================================================================================================
@@ -13,8 +13,6 @@ import dblock
 #===================================================================================================
 def testLocalSetup(list,debug=0):
     # The local setup needs a number of things to be present. Make sure all is there, or complain.
-
-    print ' Test local setup.'
 
     # See whether we are setup
     base = os.environ.get('FIBS_BASE')
@@ -86,9 +84,6 @@ def pullFilesFromList(listFile,nFiles,debug):
     # now write the remainig list back to the file
     writeList(listFile,fileList,debug)
 
-    # pretend this takes some time
-    #time.sleep()
-
     # finally we can release the lock
     lock.release()
 
@@ -98,13 +93,14 @@ def pullFilesFromList(listFile,nFiles,debug):
 #  M A I N
 #===================================================================================================
 # Define string to explain usage of the script
-usage =  " Usage: fibs.py   --list=<list of file to consider>\n"
+usage =  " Usage: fibs.py   --task=<script to run>\n"
+usage += "                  --list=<list of file to consider>\n"
 usage += "                [ --debug=0 ]             <-- see various levels of debug output\n"
 usage += "                [ --exec ]                <-- add this to execute all actions\n"
 usage += "                [ --help ]\n"
 
 # Define the valid options which can be specified and check out the command line
-valid = ['configFile=','list=','debug=','exec','help']
+valid = ['configFile=','task=','list=','debug=','exec','help']
 try:
     opts, args = getopt.getopt(sys.argv[1:], "", valid)
 except getopt.GetoptError, ex:
@@ -140,6 +136,9 @@ for opt, arg in opts:
     elif opt == "--exec":
         exe = True
 
+# keeping track of the hostname
+hostname = socket.gethostname()
+
 # inspecting the local setup
 #---------------------------
 testLocalSetup(list,debug)
@@ -149,12 +148,36 @@ testLocalSetup(list,debug)
 config = ConfigParser.RawConfigParser()
 config.read(configFile)
 
+# get our parameters as needed
+base = os.environ.get('FIBS_BASE')
+task = config.get('general','task')
+outerr = config.get('io','outerr')
+
+# make sure we have the output directory
+os.system("mkdir -p " + outerr)
+
 # Grab files from the list (first lock, re-write and unlock)
 #-----------------------------------------------------------
-files = ['empty','empty']
-while len(files) > 0:
+# -- quit when job is done
+#files = ['empty']
+#while len(files) > 0:
+
+# -- stay in there and let job develop
+while True:
+
     files = pullFilesFromList(list,nFiles,debug)
     print files
-    time.sleep(1)
 
+    for file in files:
+
+        # get base file
+        baseFile = (file.split('/')).pop()
+
+        # execute our task
+        cmd = base + '/task/' + task + ' ' + file \
+            + ' 1> ' + outerr + '/' + baseFile + '-' + hostname + '.out' \
+            + ' 2> ' + outerr + '/' + baseFile + '-' + hostname + '.err'
+        
+        os.system(cmd)
+        
 sys.exit(0)
