@@ -6,14 +6,17 @@
 # define the task
 SERVICE="$1"
 TASK="$2"
-if [ "$TASK" == "" ]
+if [ "$SERVICE" == "" ] || [ "$TASK" == "" ]
 then
   echo ""; echo " Please specify task as parameter. EXIT!"; echo ""
   exit 1
 fi
 
+# define which script to run on each worker
 case "$SERVICE" in
   start)
+    script=startRemoteOn.sh;;
+  cleanstart)
     script=startRemoteOn.sh;;
   stop)
     script=stopRemoteOn.sh;;
