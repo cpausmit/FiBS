@@ -4,6 +4,11 @@
 #---------------------------------------------------------------------------------------------------
 CLIENT="$1"
 TASK="$2"
+if [ "$CLIENT" == "" ] || [ "$TASK" == "" ]
+then
+  echo ""; echo " Please specify client and task as parameter. EXIT!"; echo ""
+  exit 1
+fi
 
 # setup FiBS
 source /home/cmsprod/FiBS/setup.sh

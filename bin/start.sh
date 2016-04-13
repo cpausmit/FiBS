@@ -3,6 +3,11 @@
 # Startup daemon for the dropbox copy on this machine
 #---------------------------------------------------------------------------------------------------
 TASK="$1"
+if [ "$TASK" == "" ]
+then
+  echo ""; echo " Please specify task as parameter. EXIT!"; echo ""
+  exit 1
+fi
 
 # make sure engine is not yet running
 

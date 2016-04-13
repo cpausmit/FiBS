@@ -8,7 +8,7 @@ SERVICE="$1"
 TASK="$2"
 if [ "$SERVICE" == "" ] || [ "$TASK" == "" ]
 then
-  echo ""; echo " Please specify task as parameter. EXIT!"; echo ""
+  echo ""; echo " Please specify service and task as parameter. EXIT!"; echo ""
   exit 1
 fi
 
@@ -34,12 +34,11 @@ source ~/FiBS/setup.sh
 # get our list into the consume space
 if [ "$SERVICE" == "cleanstart" ] 
 then
-  cd $FIBS_BASE
-  cp ./list/$TASK.list $FIBS_WORK/
+  cp $FIBS_BASE/list/$TASK.list $FIBS_WORK/
 fi
 
 # get list of batch workers
-workers=`cat ./config/workers.cfg`
+workers=`cat $FIBS_BASE/config/workers.cfg`
 
 # start the various workers
 for worker in $workers
