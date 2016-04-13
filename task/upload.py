@@ -23,12 +23,6 @@ def showSetup():
 
     return
 
-def setupCmssw():
-    #source /cvmfs/cms.cern.ch/cmsset_default.sh
-    #scram project CMSSW CMSSW_$THIS_CMSSW_VERSION
-    pass
-
-     
 def exeCmd(cmd,debug=0):
     # execute a given command and show what is going on
 
@@ -40,6 +34,17 @@ def exeCmd(cmd,debug=0):
     if debug>1:
         print ' =E=N=D=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n'
     return rc
+
+def reviewFileName(fullFile,debug=0):
+    # execute a given command and show what is going on
+
+    file = fullFile
+    if fullFile.startswith('/cms/store'):
+        file = fullFile.replace('/cms/store','/store',1)
+        if debug>1:
+            print ' Trimming input file name: %s -> %s'%(fullFile,file)
+
+    return file
 
 def pullFileToLocal(fullFile,debug=0):
     # execute a given command and show what is going on
@@ -103,6 +108,9 @@ if len(sys.argv)<2:
 # read command line parameters
 fullFile = sys.argv[1]
 baseFile = (fullFile.split("/")).pop()
+
+# make sure to trim the input file if needed (want to go back to lfn = /store/...)
+fullFile = reviewFileName(fullFile,debug)
 
 # show the certificate
 exeCmd("voms-proxy-info -all",debug)

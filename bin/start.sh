@@ -29,4 +29,4 @@ source /home/cmsprod/PyCox/setup.sh
 
 # start the engine
 cd $FIBS_BASE
-./fibsEngine.py --configFile=./config/${TASK}.cfg --task=${TASK}.py --list=${TASK}.list &
+./fibsEngine.py --configFile=./config/${TASK}.cfg --task=${TASK}.py --list=${TASK}.list

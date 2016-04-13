@@ -40,20 +40,25 @@ def establishLock(debug):
 def readList(listFile,debug):
     # read the list of files into memory
 
-    with open(os.environ.get('FIBS_WORK')+'/'+listFile,'r') as fileH:
-        fileList = [line.rstrip('\n') for line in fileH]
+    fileList = open(os.environ.get('FIBS_WORK')+'/'+listFile).read().split('\n')
+
+    if debug>0:
+        print ' readList -- Found %d files.'%(len(fileList))
 
     return fileList
 
 def writeList(listFile,fileList,debug):
     # write the list of files from memory back to the file
 
-    with open(os.environ.get('FIBS_WORK')+'/'+listFile,'w') as fileH:
-        for file in fileList:
-            fileH.write(file + '\n')
+    fileH = open(os.environ.get('FIBS_WORK')+'/'+listFile,'w')
+    for file in fileList:
+        fileH.write(file + '\n')
+    fileH.close()
+
+    if debug>0:
+        print ' writeList -- Found %d files.'%(len(fileList))
 
     return fileList
-
 
 def getFiles(fileList,nFiles,debug):
     # take out the first nFiles entries of the list
