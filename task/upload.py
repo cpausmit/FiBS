@@ -70,7 +70,7 @@ def makeDbxDir(fullFile,debug=0):
     f = fullFile.split("/")
     f.pop()
     dir = '/'.join(f)
-    rc = exeCmd("pycox.py --action=mkdir --source=/cms" + dir)
+    rc = exeCmd("$MY_PYTHON $PYCOX_BASE/pycox.py --action=mkdir --source=/cms" + dir)
 
     if rc == 0:
         print " make remote directory worked."
@@ -83,7 +83,7 @@ def uploadFile(fullFile,debug=0):
     # make the remote directory
 
     baseFile = (fullFile.split("/")).pop()
-    rc = exeCmd("pycox.py --action=up --source=/tmp/%s --target=/cms%s"%(baseFile,fullFile))
+    rc = exeCmd("$MY_PYTHON $PYCOX_BASE/pycox.py --action=up --source=/tmp/%s --target=/cms%s"%(baseFile,fullFile))
 
     if rc == 0:
         print " upload worked."
