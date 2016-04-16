@@ -1,7 +1,10 @@
 #!/bin/bash
 #---------------------------------------------------------------------------------------------------
-# Startup daemon for dropbox copy on a given machine with specific log file.
+# Startup daemon for the dropbox copy on a given machine with specific log file
 #---------------------------------------------------------------------------------------------------
+# make sure the syste, has been setup
+[ -z "$FIBS_BASE" ] && ( echo "FIBS is not setup. EXIT!"; exit 1; )
+
 CLIENT="$1"
 TASK="$2"
 if [ "$CLIENT" == "" ] || [ "$TASK" == "" ]
@@ -13,13 +16,16 @@ fi
 # setup FiBS
 source /home/cmsprod/FiBS/setup.sh
 
+# test whether there is already something running
 isRunning=`ssh -x $CLIENT "ps auxw|grep fibsEngine.py|grep ${TASK}.cfg|grep -v grep|cut -d' ' -f1"`
 if [ "$isRunning" != "" ]
 then
-  echo "RUNNING -- fibs engine (config:$TASK) is running on $CLIENT"
+  echo " is already RUNNING -- fibs engine (config:$TASK on $CLIENT)"
   exit 1
-else
-  echo "No engine (config:$TASK) runs on $CLIENT."
-fi
+fi 
 
-exit 0
+# start up the engine on the remote machine
+echo " STARTING the FiBS engine with task $TASK on $CLIENT"
+ssh -x $CLIENT "nohup ./FiBS/bin/start.sh $TASK > $FIBS_LOGS/${TASK}_${CLIENT}.log 2>&1 &"
+
+exit $?

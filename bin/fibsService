@@ -3,6 +3,9 @@
 # FiBS services.
 #
 #---------------------------------------------------------------------------------------------------
+# make sure the syste, has been setup
+[ -z "$FIBS_BASE" ] && ( echo "FIBS is not setup. EXIT!"; exit 1; )
+
 # define the task
 SERVICE="$1"
 TASK="$2"
@@ -15,21 +18,17 @@ fi
 # define which script to run on each worker
 case "$SERVICE" in
   start)
-    script=startRemoteOn.sh;;
+    script=fibsStartRemoteOn.sh;;
   cleanstart)
-    script=startRemoteOn.sh;;
+    script=fibsStartRemoteOn.sh;;
   stop)
-    script=stopRemoteOn.sh;;
+    script=fibsStopRemoteOn.sh;;
   status)
-    script=statusRemoteOn.sh;;
+    script=fibsStatusRemoteOn.sh;;
   *)
     echo $"Usage: $0 {start|stop|restart|condrestart|status}"
     exit 1
 esac
-
-
-# setup our queue system
-source ~/FiBS/setup.sh
 
 # get our list into the consume space
 if [ "$SERVICE" == "cleanstart" ] 

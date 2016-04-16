@@ -11,17 +11,13 @@ import dblock
 #===================================================================================================
 #  H E L P E R S
 #===================================================================================================
-def testLocalSetup(list,debug=0):
+def testLocalSetup(debug=0):
     # The local setup needs a number of things to be present. Make sure all is there, or complain.
 
     # See whether we are setup
     base = os.environ.get('FIBS_BASE')
     if base=='':
         print '\n ERROR -- FiBS is not setup FIBS_BASE environment not set.\n'
-        sys.exit(1)
-
-    if list=='':
-        print '\n ERROR -- FiBS needs a list of files to consider.\n'
         sys.exit(1)
 
     return
@@ -52,7 +48,8 @@ def writeList(listFile,fileList,debug):
 
     fileH = open(os.environ.get('FIBS_WORK')+'/'+listFile,'w')
     for file in fileList:
-        fileH.write(file + '\n')
+        if file != '':   # avoid empty lines
+            fileH.write(file + '\n')
     fileH.close()
 
     if debug>0:
@@ -98,14 +95,12 @@ def pullFilesFromList(listFile,nFiles,debug):
 #  M A I N
 #===================================================================================================
 # Define string to explain usage of the script
-usage =  " Usage: fibs.py   --task=<script to run>\n"
-usage += "                  --list=<list of file to consider>\n"
+usage =  " Usage: fibs.py   --configFile=<file with full config>\n"
 usage += "                [ --debug=0 ]             <-- see various levels of debug output\n"
-usage += "                [ --exec ]                <-- add this to execute all actions\n"
 usage += "                [ --help ]\n"
 
 # Define the valid options which can be specified and check out the command line
-valid = ['configFile=','task=','list=','debug=','exec','help']
+valid = ['configFile=','debug=','help']
 try:
     opts, args = getopt.getopt(sys.argv[1:], "", valid)
 except getopt.GetoptError, ex:
@@ -122,9 +117,7 @@ testFile = os.environ.get('HOME') + '/' + '.fibs.cfg'
 if os.path.isfile(testFile):
     configFile = testFile
 
-list = ''
 nFiles = 1
-exe = False
 debug = 0
 
 # Read new values from the command line
@@ -132,21 +125,17 @@ for opt, arg in opts:
     if   opt == "--help":
         print usage
         sys.exit(0)
-    elif opt == "--list":
-        list = arg
     elif opt == "--configFile":
         configFile = arg
     elif opt == "--debug":
         debug = int(arg)
-    elif opt == "--exec":
-        exe = True
 
 # keeping track of the hostname
 hostname = socket.gethostname()
 
 # inspecting the local setup
 #---------------------------
-testLocalSetup(list,debug)
+testLocalSetup(debug)
 
 # reading detailed configurations
 #--------------------------------
@@ -156,6 +145,7 @@ config.read(configFile)
 # get our parameters as needed
 base = os.environ.get('FIBS_BASE')
 task = config.get('general','task')
+list = config.get('general','list')
 outerr = config.get('io','outerr')
 
 # make sure we have the output directory

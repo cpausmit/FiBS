@@ -2,6 +2,9 @@
 #---------------------------------------------------------------------------------------------------
 # Startup daemon for the dropbox copy on this machine
 #---------------------------------------------------------------------------------------------------
+# make sure the syste, has been setup
+[ -z "$FIBS_BASE" ] && ( echo "FIBS is not setup. EXIT!"; exit 1; )
+
 TASK="$1"
 if [ "$TASK" == "" ]
 then
@@ -24,9 +27,7 @@ fi
 voms-proxy-init --valid 168:00 -voms cms
 
 # setup the core programs
-source /home/cmsprod/FiBS/setup.sh
 source /home/cmsprod/PyCox/setup.sh
 
 # start the engine
-cd $FIBS_BASE
-./fibsEngine.py --configFile=./config/${TASK}.cfg --task=${TASK}.py --list=${TASK}.list
+fibsEngine.py --configFile=$FIBS_BASE/config/${TASK}.cfg
