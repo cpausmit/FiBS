@@ -18,13 +18,13 @@ fi
 # define which script to run on each worker
 case "$SERVICE" in
   start)
-    script=fibsStartRemoteOn.sh;;
+    script=fibsStartRemoteOn;;
   cleanstart)
-    script=fibsStartRemoteOn.sh;;
+    script=fibsStartRemoteOn;;
   stop)
-    script=fibsStopRemoteOn.sh;;
+    script=fibsStopRemoteOn;;
   status)
-    script=fibsStatusRemoteOn.sh;;
+    script=fibsStatusRemoteOn;;
   *)
     echo $"Usage: $0 {start|stop|restart|condrestart|status}"
     exit 1
