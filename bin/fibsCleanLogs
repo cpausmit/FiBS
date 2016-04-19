@@ -1,0 +1,39 @@
+#!/bin/bash
+#---------------------------------------------------------------------------------------------------
+# Script to find the oldest log files and clean. Trigger is the number of files in the log
+# directory.
+#---------------------------------------------------------------------------------------------------
+# make sure FiBS is setup
+[ -z "$FIBS_BASE" ] && ( echo "FIBS is not setup. EXIT!"; exit 1; )
+
+TASK="$1"
+if [ "$TASK" == "" ]
+then
+  echo ""; echo " Please specify a task parameter. EXIT!"; echo ""
+  exit 1
+fi
+
+# find the number of files in the log area
+find $FIBS_LOGS/$TASK -printf "%T@ %p\n" | sort -n > /tmp/FiBS_logs.$$
+
+nFiles=`cat /tmp/FiBS_logs.$$ | wc -l`
+
+# now see whether deletion is needed
+echo ""
+echo " Found $nFiles log files in $FIBS_LOGS/$TASK/"
+if [ "$nFiles" -gt 5000 ]
+then
+  nDelete=$(($nFiles-5000))
+  echo " Start deleting $nDelete files (oldest ones)."
+  files=`head -$nDelete /tmp/FiBS_logs.$$ | cut -d ' ' -f2`
+  rm -f /tmp/FiBS_logs.$$
+  for file in $files
+  do
+    echo " Deleting: $file"
+    rm $file
+  done
+else
+  rm -f /tmp/FiBS_logs.$$
+fi
+
+exit 0

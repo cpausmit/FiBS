@@ -49,11 +49,15 @@ def reviewFileName(fullFile,debug=0):
 def pullFileToLocal(fullFile,debug=0):
     # execute a given command and show what is going on
 
-    SERVER = "se01.cmsaf.mit.edu"
-
     baseFile = (fullFile.split("/")).pop()
-    cmd = "lcg-cp -D srmv2 -b srm://" + SERVER + ":8443/srm/v2/server?SFN=/mnt/hadoop/cms" \
-        + fullFile + " file:///tmp/" + baseFile 
+
+    #SERVER = "se01.cmsaf.mit.edu"
+    #cmd = "lcg-cp -D srmv2 -b srm://" + SERVER + ":8443/srm/v2/server?SFN=/mnt/hadoop/cms" \
+    #    + fullFile + " file:///tmp/" + baseFile 
+
+    #SERVER = "xrootd.unl.edu"
+    SERVER = "xrootd1.cmsaf.mit.edu"
+    cmd = "xrdcp -d 1 root://" + SERVER + "/" + fullFile + " /tmp/" + baseFile 
 
     rc = exeCmd(cmd,debug)
 
