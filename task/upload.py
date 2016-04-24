@@ -55,9 +55,9 @@ def pullFileToLocal(fullFile,debug=0):
     #cmd = "lcg-cp -D srmv2 -b srm://" + SERVER + ":8443/srm/v2/server?SFN=/mnt/hadoop/cms" \
     #    + fullFile + " file:///tmp/" + baseFile 
 
-    #SERVER = "xrootd.unl.edu"
-    SERVER = "xrootd1.cmsaf.mit.edu"
-    cmd = "xrdcp -d 1 root://" + SERVER + "/" + fullFile + " /tmp/" + baseFile 
+    ##SERVER = "xrootd.unl.edu"
+    SERVER = "xrootd.cmsaf.mit.edu"
+    cmd = "xrdcp -s root://" + SERVER + "/" + fullFile + " /tmp/" + baseFile 
 
     rc = exeCmd(cmd,debug)
 
@@ -87,7 +87,8 @@ def uploadFile(fullFile,debug=0):
     # make the remote directory
 
     baseFile = (fullFile.split("/")).pop()
-    rc = exeCmd("$MY_PYTHON $PYCOX_BASE/pycox.py --action=up --source=/tmp/%s --target=/cms%s"%(baseFile,fullFile))
+    rc = exeCmd("$MY_PYTHON $PYCOX_BASE/pycox.py --action=up" \
+                    + " --source=/tmp/%s --target=/cms%s"%(baseFile,fullFile))
 
     if rc == 0:
         print " upload worked."
@@ -120,10 +121,18 @@ fullFile = reviewFileName(fullFile,debug)
 exeCmd("voms-proxy-info -all",debug)
 
 # download the file to local
-pullFileToLocal(fullFile,debug)
+rc = pullFileToLocal(fullFile,debug)
+if rc != 0:
+    print "\n Local file download failed. EXIT!\n Cleanup potential remainders."
+    exeCmd("rm -f /tmp/%s"%(baseFile))
+    sys.exit(rc)
 
 # prepare the directory on remote site
 makeDbxDir(fullFile,debug)
+if rc != 0:
+    print "\n Making dropbox directory failed. EXIT!\n Cleanup potential remainders."
+    exeCmd("rm -f /tmp/%s"%(baseFile))
+    sys.exit(rc)
 
 # upload
 uploadFile(fullFile,debug)

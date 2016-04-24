@@ -173,13 +173,15 @@ while True:
             + ' 1> ' + outerr + '/' + baseFile + '-' + hostname + '.out' \
             + ' 2> ' + outerr + '/' + baseFile + '-' + hostname + '.err'
         
-        os.system(cmd)
+        if file != '':
+            os.system(cmd)
+        else:
+            print ' fibsEngine: there is not work here to be done.'
 
     # when the list is empty take some time to ask for more
     if len(files) == 0:
         if debug > 1:
             print '\n List is empty: waiting for 30 secs.'
         time.sleep(30)
-
         
 sys.exit(0)

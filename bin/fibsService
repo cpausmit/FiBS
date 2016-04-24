@@ -37,12 +37,14 @@ then
 fi
 
 # get list of batch workers
-workers=`cat $FIBS_BASE/config/workers.cfg`
+workers=`cat $FIBS_BASE/config/workers.cfg | grep -v ^#`
 
 # start the various workers
 for worker in $workers
 do
   $script $worker $TASK
 done
+
+
 
 exit 0
