@@ -1,0 +1,27 @@
+#!/bin/bash
+#---------------------------------------------------------------------------------------------------
+# Startup the fibs engine on a given machine with specific log file.
+#---------------------------------------------------------------------------------------------------
+TASK="$1"
+if [ "$TASK" == "" ]
+then
+  echo ""; echo " Please specify task as parameter. EXIT!"; echo ""
+  exit 1
+fi
+
+# setup FiBS
+source /home/cmsprod/FiBS/setup.sh
+
+# test whether there is already something running
+isRunning=`ps auxw|grep fibsEngine.py|grep ${TASK}.cfg|grep -v grep|cut -d' ' -f1`
+if [ "$isRunning" != "" ]
+then
+  echo " is already RUNNING -- fibs engine (config:$TASK on $HOSTNAME)"
+  exit 1
+fi 
+
+# start up the engine on this machine
+echo " STARTING the FiBS engine with task $TASK on $HOSTNAME"
+nohup fibsStartEngine $TASK > $FIBS_LOGS/${TASK}_${HOSTNAME}.log 2>&1 &
+
+exit $?
