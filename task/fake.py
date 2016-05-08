@@ -1,24 +1,29 @@
 #!/usr/bin/env python
 #---------------------------------------------------------------------------------------------------
-# Upload exactly one file to dropbox.
+# Fake some activity and produce output.
 #
 #                                                                             Ch.Paus (Sep 30, 2015)
 #---------------------------------------------------------------------------------------------------
 import os,sys,re,socket,datetime,time
+
 #---------------------------------------------------------------------------------------------------
 #  H E L P E R S 
 #---------------------------------------------------------------------------------------------------
+def showSetup(firstTime,fHandle):
 
-def showSetup():
-    print "\n=-=-=-= Show who and where we are =-=-=-=\n"
-    print " Script:    %s"%(os.path.basename(__file__))
-    print " Arguments: %s"%(" ".join(sys.argv[1:]))
-    print " "
-    print " start time    : %s"%(str(datetime.datetime.now()))
-    print " user executing: " + os.getenv('USER','unknown user')
-    print " running on    : %s"%(socket.gethostname())
-    print " executing in  : %s"%(os.getcwd())
-    print " "
+    if firstTime:
+        fileH.write("\n=-=-=-= Show who and where we are =-=-=-=\n\n")
+        fileH.write(" Script:    %s\n"%(os.path.basename(__file__)))
+        fileH.write(" Arguments: %s\n"%(" ".join(sys.argv[1:])))
+        fileH.write(" \n")
+        fileH.write(" start time    : %s\n"%(str(datetime.datetime.now())))
+    else:
+        fileH.write(" time now      : %s\n"%(str(datetime.datetime.now())))
+
+    fileH.write(" user executing: " + os.getenv('USER','unknown user') + "\n")
+    fileH.write(" running on    : %s\n"%(socket.gethostname()))
+    fileH.write(" executing in  : %s\n"%(os.getcwd()))
+    fileH.write(" \n")
 
     return
 
@@ -27,16 +32,18 @@ def showSetup():
 #---------------------------------------------------------------------------------------------------
 
 # make announcement
-showSetup()
-time.sleep(10)
+firstTime = True
+while True:
 
-showSetup()
-time.sleep(10)
+    if firstTime:
+        fileH = open('/home/cmsprod/cms/logs/fibs/fake.log','w')
+    else:
+        fileH = open('/home/cmsprod/cms/logs/fibs/fake.log','a')
+    showSetup(firstTime,fileH)
+    fileH.close()
 
-showSetup()
-time.sleep(10)
+    time.sleep(10)
+    firstTime = False
 
-showSetup()
-time.sleep(10)
 
 sys.exit(0)

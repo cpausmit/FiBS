@@ -3,6 +3,7 @@
 #
 # This is the engine that we can start on a given machine and it will start activity as instructed.
 #
+#
 #                                                                        v0 - April 1, 2016 - C.Paus
 #---------------------------------------------------------------------------------------------------
 import os,sys,getopt,re,ConfigParser,time,socket
@@ -112,11 +113,9 @@ except getopt.GetoptError, ex:
 # Get all parameters for the production
 # --------------------------------------------------------------------------------------------------
 # Set defaults for each command line parameter/option
-configFile = os.environ.get('FIBS_BASE') + '/' + 'fibs.cfg'
-testFile = os.environ.get('HOME') + '/' + '.fibs.cfg'
-if os.path.isfile(testFile):
-    configFile = testFile
 
+# keeping track of the hostname
+hostname = socket.gethostname()
 nFiles = 1
 debug = 0
 
@@ -130,13 +129,6 @@ for opt, arg in opts:
     elif opt == "--debug":
         debug = int(arg)
 
-# keeping track of the hostname
-hostname = socket.gethostname()
-
-# inspecting the local setup
-#---------------------------
-testLocalSetup(debug)
-
 # reading detailed configurations
 #--------------------------------
 config = ConfigParser.RawConfigParser()
@@ -147,6 +139,15 @@ base = os.environ.get('FIBS_BASE')
 task = config.get('general','task')
 list = config.get('general','list')
 outerr = config.get('io','outerr')
+log = outerr + '-' + hostname + '.log'
+
+# make sure now to capture all input and open and close to keep it up to date
+handleStdout = sys.stdout
+sys.stdout = open(log,'a')
+
+# inspecting the local setup
+#---------------------------
+testLocalSetup(debug)
 
 # make sure we have the output directory
 os.system("mkdir -p " + outerr)
@@ -157,13 +158,20 @@ os.system("mkdir -p " + outerr)
 #files = ['empty']
 #while len(files) > 0:
 
+#CPsys.stdout.close() # force write
+
 # -- stay in there and let job develop
 while True:
 
+    #CPsys.stdout = open(log,'a') # append
     files = pullFilesFromList(list,nFiles,debug)
     print files
+    #CPsys.stdout.close() # force write
+    #CPsys.stdout = handleStdout
 
     for file in files:
+
+        #CPsys.stdout = open(log,'a') # append
 
         # get base file
         baseFile = (file.split('/')).pop()
@@ -174,14 +182,21 @@ while True:
             + ' 2> ' + outerr + '/' + baseFile + '-' + hostname + '.err'
         
         if file != '':
+            print ' fibsEngine: next task: %s'%(cmd)
+            #CPsys.stdout.close() # force write
+            #CPsys.stdout = handleStdout
             os.system(cmd)
         else:
-            print ' fibsEngine: there is not work here to be done.'
+            print ' fibsEngine: there is no work here to be done.'
 
     # when the list is empty take some time to ask for more
+    #CPsys.stdout = open(log,'a') # append
     if len(files) == 0:
         if debug > 1:
             print '\n List is empty: waiting for 30 secs.'
         time.sleep(30)
-        
+
+    #CPsys.stdout.close() # force write
+    #CPsys.stdout = handleStdout
+  
 sys.exit(0)

@@ -26,6 +26,6 @@ fi
 
 # start up the engine on the remote machine
 echo " STARTING the FiBS engine with task $TASK on $CLIENT"
-ssh -x $CLIENT "nohup ./FiBS/bin/fibsStartEngine $TASK > $FIBS_LOGS/${TASK}_${CLIENT}.log 2>&1 &"
+ssh -x $CLIENT "nohup ./FiBS/bin/fibsStartEngine $TASK > $FIBS_LOGS/${TASK}-${CLIENT}.log 2>&1 &"
 
 exit $?

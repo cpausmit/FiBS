@@ -1,0 +1,45 @@
+#!/bin/bash
+#---------------------------------------------------------------------------------------------------
+# Find potentially stuck engines.
+#---------------------------------------------------------------------------------------------------
+[ -z "$FIBS_BASE" ] && ( echo " ERROR - FiBS not setup. EXIT!"; exit 1 )
+
+TASK="$1"
+if [ "$TASK" == "" ]
+then
+  echo ""; echo " Please specify task as parameter. EXIT!"; echo ""
+  exit 1
+fi
+NPROCS=150
+if [ "$2" != "" ]
+then
+  NPROCS="$2"
+fi
+
+# say what we are going to do
+echo ""
+echo " fibsFindStuckEngines -- is analyzing the last $NPROCS logfile updates."
+echo ""
+
+hosts=`ls -lhrt $FIBS_LOGS/$TASK/ | grep .err | tail -$NLINES | sed 's@^.*-\(t3.*edu\).err@\1@' \
+       | sort -u`
+
+for worker in `cat $FIBS_BASE/config/workers.cfg | grep -v ^#`
+do
+  if [ "`echo $hosts | grep $worker`" == "" ]
+  then
+    echo " INACTIVE WORKER: $worker"
+    #fibsStopRemoteOn  $worker $TASK
+    #fibsStartRemoteOn $worker $TASK
+  else
+    echo "   active worker: $worker"
+  fi
+done
+
+nHostsAll=`cat $FIBS_BASE/config/workers.cfg | wc -l`
+nHostsActive=`echo $hosts | wc -w`
+echo ""
+echo " Active: $nHostsActive (of $nHostsAll)"
+echo ""
+
+exit 0

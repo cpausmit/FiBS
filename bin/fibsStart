@@ -22,6 +22,6 @@ fi
 
 # start up the engine on this machine
 echo " STARTING the FiBS engine with task $TASK on $HOSTNAME"
-nohup fibsStartEngine $TASK > $FIBS_LOGS/${TASK}_${HOSTNAME}.log 2>&1 &
+nohup fibsStartEngine $TASK > $FIBS_LOGS/${TASK}-${HOSTNAME}.log 2>&1 &
 
 exit $?

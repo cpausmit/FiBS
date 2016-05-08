@@ -51,13 +51,13 @@ def pullFileToLocal(fullFile,debug=0):
 
     baseFile = (fullFile.split("/")).pop()
 
-    #SERVER = "se01.cmsaf.mit.edu"
-    #cmd = "lcg-cp -D srmv2 -b srm://" + SERVER + ":8443/srm/v2/server?SFN=/mnt/hadoop/cms" \
-    #    + fullFile + " file:///tmp/" + baseFile 
+    SERVER = "se01.cmsaf.mit.edu"
+    cmd = "lcg-cp -D srmv2 -b srm://" + SERVER + ":8443/srm/v2/server?SFN=/mnt/hadoop/cms" \
+        + fullFile + " file:///tmp/" + baseFile 
 
-    ##SERVER = "xrootd.unl.edu"
-    SERVER = "xrootd.cmsaf.mit.edu"
-    cmd = "xrdcp -s root://" + SERVER + "/" + fullFile + " /tmp/" + baseFile 
+    ###SERVER = "xrootd.unl.edu"
+    #SERVER = "xrootd.cmsaf.mit.edu"
+    #cmd = "xrdcp -s root://" + SERVER + "/" + fullFile + " /tmp/" + baseFile 
 
     rc = exeCmd(cmd,debug)
 
