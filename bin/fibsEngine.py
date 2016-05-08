@@ -23,12 +23,12 @@ def testLocalSetup(debug=0):
 
     return
 
-def establishLock(debug):
+def establishLock(task,debug):
     # check if so someone is locking and if not, establish a lock
 
     lock = None
     while not lock:
-        lock = dblock.dblock(os.environ.get('FIBS_WORK')+'/lock',True).acquire()
+        lock = dblock.dblock(os.environ.get('FIBS_WORK') + '/' + task,True).acquire()
         if not lock:
             time.sleep(1)
 
@@ -71,12 +71,12 @@ def getFiles(fileList,nFiles,debug):
 
     return (files,fileList[nFiles:])
 
-def pullFilesFromList(listFile,nFiles,debug):
+def pullFilesFromList(task,listFile,nFiles,debug):
     # pull a given number of files from a list of files that are stored in a file the tricky bit
     # is that there are several asyncronous processes running and a lock has to be established
 
     # get the lock
-    lock = establishLock(debug)
+    lock = establishLock(task,debug)
 
     # read the file list into memory
     fileList = readList(listFile,debug)
@@ -96,9 +96,9 @@ def pullFilesFromList(listFile,nFiles,debug):
 #  M A I N
 #===================================================================================================
 # Define string to explain usage of the script
-usage =  " Usage: fibs.py   --configFile=<file with full config>\n"
-usage += "                [ --debug=0 ]             <-- see various levels of debug output\n"
-usage += "                [ --help ]\n"
+usage =  " Usage: fibsEngine.py   --configFile=<file with full config>\n"
+usage += "                      [ --debug=0 ]             <-- see various levels of debug output\n"
+usage += "                      [ --help ]\n"
 
 # Define the valid options which can be specified and check out the command line
 valid = ['configFile=','debug=','help']
@@ -118,6 +118,7 @@ except getopt.GetoptError, ex:
 hostname = socket.gethostname()
 nFiles = 1
 debug = 0
+configFile = ''
 
 # Read new values from the command line
 for opt, arg in opts:
@@ -154,24 +155,14 @@ os.system("mkdir -p " + outerr)
 
 # Grab files from the list (first lock, re-write and unlock)
 #-----------------------------------------------------------
-# -- quit when job is done
-#files = ['empty']
-#while len(files) > 0:
-
-#CPsys.stdout.close() # force write
 
 # -- stay in there and let job develop
 while True:
 
-    #CPsys.stdout = open(log,'a') # append
-    files = pullFilesFromList(list,nFiles,debug)
+    files = pullFilesFromList(task,list,nFiles,debug)
     print files
-    #CPsys.stdout.close() # force write
-    #CPsys.stdout = handleStdout
 
     for file in files:
-
-        #CPsys.stdout = open(log,'a') # append
 
         # get base file
         baseFile = (file.split('/')).pop()
@@ -183,20 +174,15 @@ while True:
         
         if file != '':
             print ' fibsEngine: next task: %s'%(cmd)
-            #CPsys.stdout.close() # force write
-            #CPsys.stdout = handleStdout
             os.system(cmd)
         else:
-            print ' fibsEngine: there is no work here to be done.'
+            print ' fibsEngine: there is no work here to be done. (sleep 10)'
+            time.sleep(10)
 
     # when the list is empty take some time to ask for more
-    #CPsys.stdout = open(log,'a') # append
     if len(files) == 0:
         if debug > 1:
             print '\n List is empty: waiting for 30 secs.'
         time.sleep(30)
-
-    #CPsys.stdout.close() # force write
-    #CPsys.stdout = handleStdout
   
 sys.exit(0)
