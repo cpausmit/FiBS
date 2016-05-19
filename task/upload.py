@@ -4,7 +4,7 @@
 #
 #                                                                             Ch.Paus (Sep 30, 2015)
 #---------------------------------------------------------------------------------------------------
-import os,sys,re,socket,datetime
+import os,sys,re,socket,datetime,time
 
 #---------------------------------------------------------------------------------------------------
 #  H E L P E R S 
@@ -57,8 +57,9 @@ def pullFileToLocal(fullFile,debug=0):
         + fullFile + " file:///tmp/" + baseFile 
 
     if True:
+        unit = int(time.time()) % 10 + 1
         #SERVER = "xrootd.unl.edu"
-        SERVER = "xrootd.cmsaf.mit.edu"
+        SERVER = "xrootd%1d.cmsaf.mit.edu"%(unit)
         cmd = "xrdcp -s root://" + SERVER + "/" + fullFile + " /tmp/" + baseFile 
 
     rc = exeCmd(cmd,debug)
