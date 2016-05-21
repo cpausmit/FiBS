@@ -166,6 +166,7 @@ while True:
 
         # get base file
         baseFile = (file.split('/')).pop()
+        baseFile = baseFile.replace(' ','%')
 
         # execute our task
         cmd = base + '/task/' + task + ' ' + file \
