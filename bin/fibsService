@@ -24,8 +24,10 @@ fi
 # define which script to run on each worker
 case "$SERVICE" in
   start)
+    voms-proxy-init --valid 168:00 -voms cms
     script=fibsStartRemoteOn;;
   cleanstart)
+    voms-proxy-init --valid 168:00 -voms cms
     script=fibsStartRemoteOn;;
   stop)
     script=fibsStopRemoteOn;;

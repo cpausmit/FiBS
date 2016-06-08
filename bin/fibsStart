@@ -18,7 +18,7 @@ if [ "$isRunning" != "" ]
 then
   echo " is already RUNNING -- fibs engine (config:$TASK on $HOSTNAME)"
   exit 1
-fi 
+fi
 
 # start up the engine on this machine
 echo " STARTING the FiBS engine with task $TASK on $HOSTNAME"

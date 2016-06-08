@@ -21,6 +21,12 @@ def showSetup():
     print " executing in  : %s"%(os.getcwd())
     print " "
 
+    # See whether we are setup
+    base = os.environ.get('PYCOX_BASE')
+    if base=='':
+        print '\n ERROR -- PYCOX is not setup PYCOX_BASE environment not set.\n'
+        sys.exit(1)
+
     return
 
 def exeCmd(cmd,debug=0):
@@ -121,6 +127,7 @@ baseFile = (fullFile.split("/")).pop()
 fullFile = reviewFileName(fullFile,debug)
 
 # show the certificate
+exeCmd("voms-proxy-init --valid 168:00 -voms cms",debug)
 exeCmd("voms-proxy-info -all",debug)
 
 # download the file to local

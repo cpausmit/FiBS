@@ -13,9 +13,6 @@ then
   exit 1
 fi
 
-# setup FiBS
-source /home/cmsprod/FiBS/setup.sh
-
 # set off the engine on the remote machine
 pid=`ssh -x $CLIENT \
      "ps auxw | grep fibsEngine.py | grep $TASK | grep -v grep | tr -s ' ' | cut -d ' ' -f2"`

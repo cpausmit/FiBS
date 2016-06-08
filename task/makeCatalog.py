@@ -155,6 +155,9 @@ loadEnv()
 mitcfg = sys.argv[1]
 version = sys.argv[2]
 dataset = sys.argv[3]
+if len(sys.argv) > 4:
+    option = sys.argv[4]
+    
 
 # derived vaiables
 book = mitcfg + '/' + version
@@ -179,7 +182,11 @@ for file in files:
     if fileId in catalogFileIds:
         print "     INFO - This file is already cataloged."
         if '/crab_0' in file:
-            print "     #CP#    t2tools.py --action rm --source " + oldFile
+            cmd = "t2tools.py --action rm --source " + oldFile
+            print "     #CP#    " + cmd
+            if option == 'remove':
+                print ' REMOVE: '+ cmd
+                os.system(cmd)
         continue
             
     # doing the cataloging here
@@ -187,7 +194,11 @@ for file in files:
     newEntry = updateEntry(entry)
     if newEntry == '':
         print "     ERROR - File seems corrupted. Skip it."
-        print "     #CP#    t2tools.py --action rm --source " + oldFile
+        cmd = "t2tools.py --action rm --source " + oldFile
+        print "     #CP#    " + cmd
+        if option == 'remove':
+            print ' REMOVE: '+ cmd
+            os.system(cmd)
         continue
 
     entries.append(newEntry)
