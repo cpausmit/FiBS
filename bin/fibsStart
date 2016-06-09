@@ -2,15 +2,15 @@
 #---------------------------------------------------------------------------------------------------
 # Startup the fibs engine on a given machine with specific log file.
 #---------------------------------------------------------------------------------------------------
+# make sure the system has been setup
+[ -z "$FIBS_BASE" ] && ( echo "FIBS is not setup. EXIT! (add to .bashrc)"; exit 1; )
+
 TASK="$1"
 if [ "$TASK" == "" ]
 then
   echo ""; echo " Please specify task as parameter. EXIT!"; echo ""
   exit 1
 fi
-
-# setup FiBS
-source /home/cmsprod/FiBS/setup.sh
 
 # test whether there is already something running
 isRunning=`ps auxw|grep fibsEngine.py|grep ${TASK}.cfg|grep -v grep|cut -d' ' -f1`

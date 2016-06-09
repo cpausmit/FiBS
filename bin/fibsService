@@ -3,7 +3,7 @@
 # FiBS services.
 #
 #---------------------------------------------------------------------------------------------------
-# make sure the syste, has been setup
+# make sure the system has been setup
 [ -z "$FIBS_BASE" ] && ( echo "FIBS is not setup. EXIT!"; exit 1; )
 
 # define the task

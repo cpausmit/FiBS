@@ -2,9 +2,6 @@
 #---------------------------------------------------------------------------------------------------
 # Startup FiBS engine on a given machine with specific log file.
 #---------------------------------------------------------------------------------------------------
-# make sure the system, has been setup
-[ -z "$FIBS_BASE" ] && ( echo "FIBS is not setup. EXIT!"; exit 1; )
-
 CLIENT="$1"
 TASK="$2"
 if [ "$CLIENT" == "" ] || [ "$TASK" == "" ]
