@@ -26,9 +26,6 @@ case "$SERVICE" in
   start)
     voms-proxy-init --valid 168:00 -voms cms
     script=fibsStartRemoteOn;;
-  cleanstart)
-    voms-proxy-init --valid 168:00 -voms cms
-    script=fibsStartRemoteOn;;
   stop)
     script=fibsStopRemoteOn;;
   status)
@@ -37,12 +34,6 @@ case "$SERVICE" in
     echo $"Usage: $0 {start|stop|restart|condrestart|status}"
     exit 1
 esac
-
-# get our list into the consume space
-if [ "$SERVICE" == "cleanstart" ] 
-then
-  cp $FIBS_BASE/list/$TASK.list $FIBS_WORK/
-fi
 
 # get list of batch workers
 workers=`cat $WORKERS | grep -v ^#`
