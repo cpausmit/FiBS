@@ -155,6 +155,7 @@ loadEnv()
 mitcfg = sys.argv[1]
 version = sys.argv[2]
 dataset = sys.argv[3]
+option = ""
 if len(sys.argv) > 4:
     option = sys.argv[4]
     
