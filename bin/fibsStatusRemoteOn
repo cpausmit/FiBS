@@ -13,7 +13,15 @@ fi
 isRunning=`ssh -x $CLIENT "ps auxw|grep fibsEngine.py|grep ${TASK}.cfg|grep -v grep|cut -d' ' -f1"`
 if [ "$isRunning" != "" ]
 then
-  echo "RUNNING -- fibs engine (config:$TASK) is running on $CLIENT"
+  echo -n "RUNNING -- fibs engine (config:$TASK) is running on $CLIENT"
+  isActive=`ssh -x $CLIENT "ps auxw|grep ${TASK}.py| grep -v grep"`
+  if [ "$isActive" != "" ]
+  then
+    echo ""
+    echo " >> Active: $isActive"
+  else
+    echo " >> Inactive."
+  fi
   exit 1
 else
   echo "No engine (config:$TASK) runs on $CLIENT."
