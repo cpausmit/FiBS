@@ -95,19 +95,22 @@ def loadFilesToCatalog(hadoop,dataset):
         if len(f) > 1:
             files.append(f[1])
 
-    cmd = 't2tools.py --action ls --source ' + hadoop + '/' + dataset
-    list = cmd.split(" ")
-    p = subprocess.Popen(list,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-    (out, err) = p.communicate()
-    rc = p.returncode
-    
-    lines = out.split("\n")
-    for line in lines:
-        if not 'root' in line or 'miniaod' in line:
-            continue
-        f = line.split(" ") 
-        if len(f) > 1:
-            files.append(f[1])
+    onlyTmp = os.getenv('MAKECATALOG_TMP_ONLY','')
+
+    if onlyTmp == '':
+        cmd = 't2tools.py --action ls --source ' + hadoop + '/' + dataset
+        list = cmd.split(" ")
+        p = subprocess.Popen(list,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        (out, err) = p.communicate()
+        rc = p.returncode
+        
+        lines = out.split("\n")
+        for line in lines:
+            if not 'root' in line or 'miniaod' in line:
+                continue
+            f = line.split(" ") 
+            if len(f) > 1:
+                files.append(f[1])
 
     return files
 
@@ -184,7 +187,7 @@ for file in files:
         print "     INFO - This file is already cataloged."
         if '/crab_0' in file:
             cmd = "t2tools.py --action rm --source " + oldFile
-            print "     #CP#    " + cmd
+            #print "     #CP#    " + cmd
             if option == 'remove':
                 print ' REMOVE: '+ cmd
                 os.system(cmd)
@@ -194,9 +197,8 @@ for file in files:
     entry = catalogFile(file)
     newEntry = updateEntry(entry)
     if newEntry == '':
-        print "     ERROR - File seems corrupted. Skip it."
         cmd = "t2tools.py --action rm --source " + oldFile
-        print "     #CP#    " + cmd
+        print "     ERROR - File seems corrupted. Skip >? " + cmd
         if option == 'remove':
             print ' REMOVE: '+ cmd
             os.system(cmd)
