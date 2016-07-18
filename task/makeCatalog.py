@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import os, pprint, subprocess, sys
+import os, pprint, subprocess, sys, datetime
 
 usage = "\n   usage:  makeCatalog.py  <mitcfg> <version> <dataset> \n"
 
@@ -81,19 +81,26 @@ def loadFilesToCatalog(hadoop,dataset):
 
     files = []
 
-    cmd = 't2tools.py --action ls --source ' + hadoop + '/' + dataset + '/crab_0*'
+    cmd = 't2tools.py --action ls --options=-l --source ' + hadoop + '/' + dataset + '/crab_0*'
     list = cmd.split(" ")
     p = subprocess.Popen(list,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     (out, err) = p.communicate()
     rc = p.returncode
     
     lines = out.split("\n")
-    for line in lines:
+    for line in lines:        
         if not 'root' in line or 'miniaod' in line:
             continue
         f = line.split(" ") 
-        if len(f) > 1:
-            files.append(f[1])
+
+        if len(f) > 7:
+            thisFile = f.pop()
+            thisTime = datetime.datetime.strptime(f[5] + " " + f[6], "%Y-%m-%d %H:%M")
+            now = datetime.datetime.now()
+            delta = now-thisTime
+            ageSeconds = delta.days * 86400 + delta.seconds
+            if ageSeconds > 14400:
+                files.append(thisFile)
 
     onlyTmp = os.getenv('MAKECATALOG_TMP_ONLY','')
 
