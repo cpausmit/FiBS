@@ -9,7 +9,7 @@ usage = "\n   usage:  makeCatalog.py  <mitcfg> <version> <dataset> \n"
 def catalogFile(file):
     # perfrom cataloging operation on one file (return the entry)
 
-    cmd = 'catalogFile.sh /mnt/hadoop' + file
+    cmd = 'catalogFile.sh ' + file
     list = cmd.split(" ")
     p = subprocess.Popen(list,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     (out, err) = p.communicate()
