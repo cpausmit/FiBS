@@ -99,7 +99,7 @@ def loadFilesToCatalog(hadoop,dataset):
             now = datetime.datetime.now()
             delta = now-thisTime
             ageSeconds = delta.days * 86400 + delta.seconds
-            if ageSeconds > 14400:
+            if ageSeconds > 3 * 3600:
                 files.append(thisFile)
 
     onlyTmp = os.getenv('MAKECATALOG_TMP_ONLY','')

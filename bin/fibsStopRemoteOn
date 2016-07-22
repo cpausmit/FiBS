@@ -26,7 +26,7 @@ fi
 pids=`ssh -x $CLIENT \
      "ps auxw | grep $TASK.py | grep -v grep | tr -s ' ' | cut -d ' ' -f2"`
 
-if [ "$pidS" == "" ]
+if [ "$pids" == "" ]
 then
   echo " No more task activity ($TASK) on $CLIENT"
 else
