@@ -37,7 +37,10 @@ def establishLock(task,debug):
 def readList(listFile,debug):
     # read the list of files into memory
 
-    fileList = open(os.environ.get('FIBS_WORK')+'/'+listFile).read().split('\n')
+    fileList = []
+
+    if os.path.exists(os.environ.get('FIBS_WORK')+'/'+listFile):
+        fileList = open(os.environ.get('FIBS_WORK')+'/'+listFile).read().split('\n')
 
     if debug>0:
         print ' readList -- Found %d files.'%(len(fileList))
