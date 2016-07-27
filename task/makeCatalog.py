@@ -1,7 +1,10 @@
 #!/usr/bin/env python
-import os, pprint, subprocess, sys, datetime
+import os, re, pprint, subprocess, sys, datetime
 
 usage = "\n   usage:  makeCatalog.py  <mitcfg> <version> <dataset> \n"
+
+# global
+alwaysDeleteAgeHours = 6
 
 #===================================================================================================
 #  H E L P E R S
@@ -80,6 +83,7 @@ def loadFilesToCatalog(hadoop,dataset):
     # load the files from an existing temporary directory for cataloging and checks
 
     files = []
+    ages = []
 
     cmd = 't2tools.py --action ls --options=-l --source ' + hadoop + '/' + dataset + '/crab_0*'
     list = cmd.split(" ")
@@ -101,6 +105,7 @@ def loadFilesToCatalog(hadoop,dataset):
             ageSeconds = delta.days * 86400 + delta.seconds
             if ageSeconds > 3 * 3600:
                 files.append(thisFile)
+                ages.append(ageSeconds)
 
     onlyTmp = os.getenv('MAKECATALOG_TMP_ONLY','')
 
@@ -118,8 +123,9 @@ def loadFilesToCatalog(hadoop,dataset):
             f = line.split(" ") 
             if len(f) > 1:
                 files.append(f[1])
+                ages.append(-1)
 
-    return files
+    return (files, ages)
 
 def regenerateCatalog(catalog,mitcfg,version,dataset):
     # the raw file is now updated and will be used to regenerate the catalog
@@ -177,15 +183,15 @@ hadoop = "/cms/store/user/paus/" + book
 
 # find the list of files to consider
 catalogFileIds = loadCatalog(catalog,mitcfg,version,dataset)
-files = loadFilesToCatalog(hadoop,dataset)
+(files, ages) = loadFilesToCatalog(hadoop,dataset)
 
 # loop over the files
 nFiles = len(files)
 i = 0
 entries = []
-for file in files:
+for file,age in zip(files,ages):
     i += 1
-    print "   -- next file: %s (%d of %d)"%(file,i,nFiles)
+    print "   -- next file: %s (%d of %d -- age[hrs]: %.1f)"%(file,i,nFiles,age/3600.)
 
     fileId = getId(file)
     oldFile = updateXrootdName(file)
@@ -193,20 +199,25 @@ for file in files:
     if fileId in catalogFileIds:
         print "     INFO - This file is already cataloged."
         if '/crab_0' in file:
-            cmd = "t2tools.py --action rm --source " + oldFile
-            #print "     #CP#    " + cmd
-            if option == 'remove':
-                print ' REMOVE: '+ cmd
-                os.system(cmd)
-        continue
+            catalogedFile = file.replace('_tmp','')
+            catalogedFile = re.sub('crab_.*/','',catalogedFile)
+            print ' FAKE REMOVE: ' + file
+            print ' FAKE KEEP: ' + catalogedFile
+            if os.path.exists(catalogedFile):
+                cmd = "t2tools.py --action rm --source " + file
+                print ' REMOVE: ' + cmd
+                print ' KEEP: ' + catalogedFile
+                #os.system(cmd)
+        else:
+          continue
             
     # doing the cataloging here
     entry = catalogFile(file)
     newEntry = updateEntry(entry)
     if newEntry == '':
         cmd = "t2tools.py --action rm --source " + oldFile
-        print "     ERROR - File seems corrupted. Skip >? " + cmd
-        if option == 'remove':
+        print "     ERROR - File seems corrupted. Skip? " + cmd
+        if option == 'remove' or age/3600. > alwaysDeleteAgeHours:
             print ' REMOVE: '+ cmd
             os.system(cmd)
         continue
