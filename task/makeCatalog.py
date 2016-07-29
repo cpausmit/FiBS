@@ -103,7 +103,7 @@ def loadFilesToCatalog(hadoop,dataset):
             now = datetime.datetime.now()
             delta = now-thisTime
             ageSeconds = delta.days * 86400 + delta.seconds
-            if ageSeconds > 3 * 3600:
+            if ageSeconds > 1 * 3600:
                 files.append(thisFile)
                 ages.append(ageSeconds)
 
@@ -174,7 +174,7 @@ dataset = sys.argv[3]
 option = ""
 if len(sys.argv) > 4:
     option = sys.argv[4]
-    
+print " INFO - makeCatalog %s %s %s %s"%(mitcfg,version,dataset,option)     
 
 # derived vaiables
 book = mitcfg + '/' + version
