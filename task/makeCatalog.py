@@ -26,6 +26,16 @@ def catalogFile(file):
 
     return entry
 
+def numberOfEventsInEntry(entry):
+    # extract the number of events in a given catalog entry
+
+    f = entry.split(" ")
+    nEvents = -1
+    if len(f)>1: 
+        nEvents = int(f[1])
+
+    return nEvents
+
 def getId(file):
     # extract the unique file id
 
@@ -78,6 +88,23 @@ def loadCatalog(catalog,mitcfg,version,dataset):
         os.system('touch ' + catalog + '/' + dataset + '/RawFiles.00')
     
     return catalogFileIds
+    
+def loadLfns(dataset):
+    # load the unique file ids of the official dataset and the number of events
+
+    # now read the raw information
+    lfnFileIds = {}
+    if os.path.exists('/home/cmsprod/cms/jobs/lfns/%s.lfns'%(dataset)):
+        with open('/home/cmsprod/cms/jobs/lfns/%s.lfns'%(dataset),'r') as fH:
+            for line in fH:
+                f = line[:-1].split(" ")
+                if len(f) > 2:
+                    fileId = getId(f[1])
+                    lfnFileIds[fileId] = int(f[2])
+    else:
+        print ' ERROR -- could not find the official lfn information.'
+        
+    return lfnFileIds
     
 def loadFilesToCatalog(hadoop,dataset):
     # load the files from an existing temporary directory for cataloging and checks
@@ -183,6 +210,9 @@ hadoop = "/cms/store/user/paus/" + book
 
 # find the list of files to consider
 catalogFileIds = loadCatalog(catalog,mitcfg,version,dataset)
+# find the number of events we should find for each fileid
+lfnFileIds =  loadLfns(dataset)
+
 (files, ages) = loadFilesToCatalog(hadoop,dataset)
 
 # loop over the files
@@ -194,7 +224,13 @@ for file,age in zip(files,ages):
     print "   -- next file: %s (%d of %d -- age[hrs]: %.1f)"%(file,i,nFiles,age/3600.)
 
     fileId = getId(file)
+    if fileId not in lfnFileIds:
+        print ' ERROR -- found Id that does not exist as lfn: %s'%(fileId)
+        sys.exit(0)
+
     oldFile = updateXrootdName(file)
+
+    lRemove = False
 
     if fileId in catalogFileIds:
         print "     INFO - This file is already cataloged."
@@ -203,17 +239,19 @@ for file,age in zip(files,ages):
             catalogedFile = re.sub('crab_.*/','',catalogedFile)
             print ' FAKE REMOVE: ' + file
             print ' FAKE KEEP: ' + catalogedFile
-            if os.path.exists(catalogedFile):
-                cmd = "t2tools.py --action rm --source " + file
-                print ' REMOVE: ' + cmd
-                print ' KEEP: ' + catalogedFile
-                #os.system(cmd)
+            lRemove = True
+            #if os.path.exists(catalogedFile):
+            #    cmd = "t2tools.py --action rm --source " + file
+            #    print ' REMOVE: ' + cmd
+            #    print ' KEEP: ' + catalogedFile
+            #    #os.system(cmd)
         else:
           continue
             
     # doing the cataloging here
     entry = catalogFile(file)
     newEntry = updateEntry(entry)
+    nEvents = numberOfEventsInEntry(newEntry)
     if newEntry == '':
         cmd = "t2tools.py --action rm --source " + oldFile
         print "     ERROR - File seems corrupted. Skip? " + cmd
@@ -222,6 +260,12 @@ for file,age in zip(files,ages):
             os.system(cmd)
         continue
 
+    if nEvents != lfnFileIds[fileId]:
+        print ' ERROR -- wrong number of entries:  %d != %d  %s'%(nEvents,lfnFileIds[fileId],fileId)
+    else:
+        print ' INFO -- found matching number of events: %d'%(nEvents)
+
+
     entries.append(newEntry)
 
     newFile = updateEntry(oldFile)
@@ -229,6 +273,10 @@ for file,age in zip(files,ages):
         cmd = "t2tools.py --action mv --source " +  oldFile + " --target " + newFile + " >/dev/null"
         print ' MOVE: '+ cmd
         os.system(cmd)
+        if lRemove:
+            cmd = "t2tools.py --action rm --source " +  oldFile + " >/dev/null"
+            print ' REMOVE REMAINDERS: '+ cmd
+            os.system(cmd)
 
     with open(catalog + '/' + dataset + '/RawFiles.00','a') as fH:
          fH.write(newEntry + '\n')
