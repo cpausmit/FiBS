@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+#===================================================================================================
+#
+# Catalog one file and add the core information to the FileCandidates table in the database.
+#
+#===================================================================================================
 import os, re, pprint, subprocess, sys, datetime
 
 usage = "\n   usage:  makeCatalog.py  <mitcfg> <version> <dataset> \n"
@@ -94,8 +99,9 @@ def loadLfns(dataset):
 
     # now read the raw information
     lfnFileIds = {}
-    if os.path.exists('/home/cmsprod/cms/jobs/lfns/%s.lfns'%(dataset)):
-        with open('/home/cmsprod/cms/jobs/lfns/%s.lfns'%(dataset),'r') as fH:
+    os.system('scp t3serv015.mit.edu:/home/cmsprod/cms/jobs/lfns/%s.lfns ./'%(dataset))
+    if os.path.exists('./%s.lfns'%(dataset)):
+        with open('./%s.lfns'%(dataset),'r') as fH:
             for line in fH:
                 f = line[:-1].split(" ")
                 if len(f) > 2:
@@ -103,6 +109,8 @@ def loadLfns(dataset):
                     lfnFileIds[fileId] = int(f[2])
     else:
         print ' ERROR -- could not find the official lfn information.'
+        sys.exit(1)
+    os.system('rm -f ./%s.lfns'%(dataset))
         
     return lfnFileIds
     
