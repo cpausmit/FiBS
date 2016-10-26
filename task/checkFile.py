@@ -180,7 +180,7 @@ nEventsLfn = getNEventsLfn(datasetId,fileName)
 
 print ' Compare: %d [lfn] and %d [output]'%(nEventsLfn,nEvents)
 
-if nEvents == nEventsLfn and nEvents<0:
+if nEvents == nEventsLfn and nEvents>0:
     # now move file to final location
     finalFile = getFinalFile(file)
     if 'crab_' in file:
