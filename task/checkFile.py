@@ -55,9 +55,14 @@ def getRequestId(file):
     datasetId = -1
 
     f = file.split('/')
-    dataset = f[-3]
-    version = f[-4]
-    mitcfg = f[-5]
+    if 'crab_' in file:
+        dataset = f[-3]
+        version = f[-4]
+        mitcfg = f[-5]
+    else:
+        dataset = f[-2]
+        version = f[-3]
+        mitcfg = f[-4]
 
     # decode the dataset
     f = dataset.split('+')
@@ -175,15 +180,16 @@ nEventsLfn = getNEventsLfn(datasetId,fileName)
 
 print ' Compare: %d [lfn] and %d [output]'%(nEventsLfn,nEvents)
 
-if nEvents == nEventsLfn:
+if nEvents == nEventsLfn and nEvents<0:
     # now move file to final location
     finalFile = getFinalFile(file)
-    cmd = "t2tools.py --action mv --source " +  file + " --target " + finalFile + " >/dev/null"
-    print ' MOVE: ' + cmd
-    os.system(cmd)
+    if 'crab_' in file:
+        cmd = "t2tools.py --action mv --source " +  file + " --target " + finalFile + " >/dev/null"
+        print ' MOVE: ' + cmd
+        os.system(cmd)
     
     # add a new catalog entry
     makeDatabaseEntry(requestId,fileName,nEvents)
 
 else:
-    print ' ERROR: event counts disagree. EXIT!'
+    print ' ERROR: event counts disagree or not positive (LFN %d,File %d). EXIT!'%(nEventsLfn,nEvents)
