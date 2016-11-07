@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import os,re,pprint,subprocess,sys,datetime,MySQLdb
+import rex
 
 Db = MySQLdb.connect(read_default_file="/etc/my.cnf",read_default_group="mysql",db="Bambu")
 Cursor = Db.cursor()
@@ -184,9 +185,19 @@ if nEvents == nEventsLfn and nEvents>0:
     # now move file to final location
     finalFile = getFinalFile(file)
     if 'crab_' in file:
-        cmd = "t2tools.py --action mv --source " +  file + " --target " + finalFile + " >/dev/null"
+        cmd = "t2tools.py --action mv --source " +  file + " --target " + finalFile
+        rex = rex.Rex('none','none')
         print ' MOVE: ' + cmd
-        os.system(cmd)
+        #os.system(cmd)
+        (rc,out,err) = rex.executeLocalAction(cmd)
+        if rc != 0:
+            print ' ERROR -- move failed: %d\n  - out:\n %s\n  - err:\n %s'%(rc,out,err)
+            if ': File exists' in out:
+                print ' REASON -- file exists: %s'%(finalFile)
+                cmd = "t2tools.py --action rm --source " +  file
+                print ' REMOVE: ' + cmd
+                (rc,out,err) = rex.executeLocalAction(cmd)
+                
     
     # add a new catalog entry
     makeDatabaseEntry(requestId,fileName,nEvents)
