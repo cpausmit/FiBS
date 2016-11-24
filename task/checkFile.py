@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-import os,re,pprint,subprocess,sys,datetime,MySQLdb
+import os,sys,subprocess
+import MySQLdb
 import rex
 
 Db = MySQLdb.connect(read_default_file="/etc/my.cnf",read_default_group="mysql",db="Bambu")
@@ -25,7 +26,9 @@ def catalogFile(file):
         if 'XX-CATALOG-XX 0000' in line:
             entry = line.replace('XX-CATALOG-XX 0000 ','')
 
-    return entry
+    print '\n o-o-o OUT o-o-o \n%s\n\n o-o-o ERR o-o-o \n%s'%(out,err)
+
+    return (out,err,entry)
 
 def getName(file):
     # extract the unique file name
@@ -76,6 +79,8 @@ def getRequestId(file):
         + " DatasetProcess = '%s' and DatasetSetup='%s' and DatasetTier='%s'"%(process,setup,tier) \
         + " and RequestConfig = '%s' and RequestVersion = '%s'"%(mitcfg,version)
 
+    ##print ' SQL - ' + sql
+
     try:
         # Execute the SQL command
         Cursor.execute(sql)
@@ -95,8 +100,8 @@ def numberOfEventsInEntry(entry):
 
     f = entry.split(" ")
     nEvents = -1
-    if len(f)>1: 
-        nEvents = int(f[1])
+    if len(f)>2: 
+        nEvents = int(f[2])
 
     return nEvents
 
@@ -136,6 +141,7 @@ def getNEventsLfn(datasetId,fileName):
 
     sql = "select FileName, PathName, NEvents from Lfns where DatasetId = %d and FileName = '%s'"\
         %(datasetId,fileName)
+    # print ' SQL - ' + sql
     try:
         # Execute the SQL command
         Cursor.execute(sql)
@@ -167,8 +173,13 @@ file = sys.argv[1]
 print " INFO - checkFile.py %s"%(file)     
             
 # doing the cataloging here
-entry = catalogFile(file)
+(out,err,entry) = catalogFile(file)
 nEvents = numberOfEventsInEntry(entry)
+
+delete = False
+if 'zombie' in out:
+    delete = True
+    print '\n o=o=o=o File corrupt, schedule deletion. o=o=o=o \n'
 
 print ' CATALOG: %d -- %s'%(nEvents,file)
 
@@ -181,26 +192,34 @@ nEventsLfn = getNEventsLfn(datasetId,fileName)
 
 print ' Compare: %d [lfn] and %d [output]'%(nEventsLfn,nEvents)
 
+# make sure we can work remotely
+remoteX = rex.Rex('none','none')
+
 if nEvents == nEventsLfn and nEvents>0:
     # now move file to final location
     finalFile = getFinalFile(file)
     if 'crab_' in file:
         cmd = "t2tools.py --action mv --source " +  file + " --target " + finalFile
-        rex = rex.Rex('none','none')
         print ' MOVE: ' + cmd
-        #os.system(cmd)
-        (rc,out,err) = rex.executeLocalAction(cmd)
+        (rc,out,err) = remoteX.executeLocalAction(cmd)
         if rc != 0:
             print ' ERROR -- move failed: %d\n  - out:\n %s\n  - err:\n %s'%(rc,out,err)
             if ': File exists' in out:
                 print ' REASON -- file exists: %s'%(finalFile)
                 cmd = "t2tools.py --action rm --source " +  file
                 print ' REMOVE: ' + cmd
-                (rc,out,err) = rex.executeLocalAction(cmd)
+                (rc,out,err) = remoteX.executeLocalAction(cmd)
                 
     
     # add a new catalog entry
     makeDatabaseEntry(requestId,fileName,nEvents)
 
 else:
-    print ' ERROR: event counts disagree or not positive (LFN %d,File %d). EXIT!'%(nEventsLfn,nEvents)
+    print ' ERROR: event counts disagree or not positive (LFN %d,File %d). EXIT!'%\
+        (nEventsLfn,nEvents)
+
+    if delete:
+        cmd = "t2tools.py --action rm --source " +  file
+        print ' REMOVE: ' + cmd
+        (rc,out,err) = remoteX.executeLocalAction(cmd)
+        
