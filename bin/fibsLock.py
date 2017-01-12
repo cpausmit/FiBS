@@ -48,6 +48,7 @@ except getopt.GetoptError, ex:
 seconds = -1
 debug = 0
 configFile = ''
+cmd = ''
 
 # Read new values from the command line
 for opt, arg in opts:
@@ -62,6 +63,18 @@ for opt, arg in opts:
         cmd = arg
     elif opt == "--debug":
         debug = int(arg)
+
+# make sure we have a working setup
+
+if not os.path.exists(configFile):
+    print '\n ERROR - no configuration specified.\n'
+    print usage
+    sys.exit(1)
+
+if cmd == '':
+    print '\n ERROR - no shell command specified.\n'
+    print usage
+    sys.exit(1)
 
 # reading detailed configurations
 #--------------------------------

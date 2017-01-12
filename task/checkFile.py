@@ -79,7 +79,7 @@ def getRequestId(file):
         + " DatasetProcess = '%s' and DatasetSetup='%s' and DatasetTier='%s'"%(process,setup,tier) \
         + " and RequestConfig = '%s' and RequestVersion = '%s'"%(mitcfg,version)
 
-    ##print ' SQL - ' + sql
+    print ' SQL - ' + sql
 
     try:
         # Execute the SQL command
@@ -141,7 +141,7 @@ def getNEventsLfn(datasetId,fileName):
 
     sql = "select FileName, PathName, NEvents from Lfns where DatasetId = %d and FileName = '%s'"\
         %(datasetId,fileName)
-    # print ' SQL - ' + sql
+    print ' SQL - ' + sql
     try:
         # Execute the SQL command
         Cursor.execute(sql)

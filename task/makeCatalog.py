@@ -4,20 +4,72 @@
 # Catalog one file and add the core information to the FileCandidates table in the database.
 #
 #===================================================================================================
-import os, re, pprint, subprocess, sys, datetime
+import os,re,subprocess,sys,datetime
+import MySQLdb
+import rex
+
+Db = MySQLdb.connect(read_default_file="/etc/my.cnf",read_default_group="mysql",db="Bambu")
+Cursor = Db.cursor()
 
 usage = "\n   usage:  makeCatalog.py  <mitcfg> <version> <dataset> \n"
 
 # global
 alwaysDeleteAgeHours = 6
+debug = 0
 
 #===================================================================================================
 #  H E L P E R S
 #===================================================================================================
+def getRequestId(mitcfg,version,dataset):
+    # extract the unique request id this file is part of
+
+    requestId = -1
+    datasetId = -1
+
+    # decode the dataset
+    f = dataset.split('+')
+    process = f[0]
+    setup = f[1]
+    tier = f[2]
+
+    sql = "select RequestId, Datasets.DatasetId from Requests inner join Datasets on " \
+        + " Datasets.DatasetId = Requests.DatasetId where " \
+        + " DatasetProcess = '%s' and DatasetSetup='%s' and DatasetTier='%s'"%(process,setup,tier) \
+        + " and RequestConfig = '%s' and RequestVersion = '%s'"%(mitcfg,version)
+
+    print ' SQL - ' + sql
+
+    try:
+        # Execute the SQL command
+        Cursor.execute(sql)
+        results = Cursor.fetchall()
+    except:
+        print 'ERROR(%s) - could not find request id.'%(sql)
+
+    # found the request Id
+    for row in results:
+        requestId = int(row[0])
+        datasetId = int(row[1])
+
+    return (requestId, datasetId)
+
+def makeDatabaseEntry(requestId,fileName,nEvents):
+
+    sql = "insert into Files(RequestId,FileName,NEvents) " \
+        + " values(%d,'%s',%d)"%(requestId,fileName,nEvents)
+    print ' SQL: ' + sql
+    try:
+        # Execute the SQL command
+        Cursor.execute(sql)
+    except:
+        print 'ERROR(%s) - could not insert new file.'%(sql)
+
+
 def catalogFile(file):
     # perfrom cataloging operation on one file (return the entry)
 
     cmd = 'catalogFile.sh ' + file
+    print ' catalog: ' + cmd
     list = cmd.split(" ")
     p = subprocess.Popen(list,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     (out, err) = p.communicate()
@@ -216,6 +268,8 @@ book = mitcfg + '/' + version
 catalog = "/home/cmsprod/catalog/t2mit/" +book
 hadoop = "/cms/store/user/paus/" + book
 
+(requestId,datasetId) = getRequestId(mitcfg,version,dataset)
+
 # find the list of files to consider
 catalogFileIds = loadCatalog(catalog,mitcfg,version,dataset)
 # find the number of events we should find for each fileid
@@ -229,7 +283,8 @@ i = 0
 entries = []
 for file,age in zip(files,ages):
     i += 1
-    print "   -- next file: %s (%d of %d -- age[hrs]: %.1f)"%(file,i,nFiles,age/3600.)
+    if debug > 1:
+        print "   -- next file: %s (%d of %d -- age[hrs]: %.1f)"%(file,i,nFiles,age/3600.)
 
     fileId = getId(file)
     if fileId not in lfnFileIds:
@@ -241,7 +296,8 @@ for file,age in zip(files,ages):
     lRemove = False
 
     if fileId in catalogFileIds:
-        print "     INFO - This file is already cataloged."
+        if debug > 1:
+            print "     INFO - This file is already cataloged."
         if '/crab_0' in file:
             catalogedFile = file.replace('_tmp','')
             catalogedFile = re.sub('crab_.*/','',catalogedFile)
@@ -271,8 +327,7 @@ for file,age in zip(files,ages):
     if nEvents != lfnFileIds[fileId]:
         print ' ERROR -- wrong number of entries:  %d != %d  %s'%(nEvents,lfnFileIds[fileId],fileId)
     else:
-        print ' INFO -- found matching number of events: %d'%(nEvents)
-
+        print ' INFO -- found matching number of events: %d (%s)'%(nEvents,fileId)
 
     entries.append(newEntry)
 
@@ -286,7 +341,10 @@ for file,age in zip(files,ages):
             print ' REMOVE REMAINDERS: '+ cmd
             os.system(cmd)
 
+    # add the new file to the database, and the RawFiles.00 (not needed as it is overwritten anyways)
     with open(catalog + '/' + dataset + '/RawFiles.00','a') as fH:
          fH.write(newEntry + '\n')
+    makeDatabaseEntry(requestId,fileId,nEvents)
+         
 
 regenerateCatalog(catalog,mitcfg,version,dataset)
