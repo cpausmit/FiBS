@@ -59,6 +59,12 @@ def getRequestId(file):
     datasetId = -1
 
     f = file.split('/')
+
+    # make sure we have a good file name
+    if len(f) < 6:
+        return (requestId, datasetId)
+        
+
     if 'crab_' in file:
         dataset = f[-3]
         version = f[-4]
