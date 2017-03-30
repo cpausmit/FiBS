@@ -33,6 +33,7 @@ task = sys.argv[2]
 
 base = os.environ.get('FIBS_BASE')
 configFile = base + '/config/' + task + '.cfg' 
+print ' Config: ' + configFile
 
 # reading detailed configurations
 #--------------------------------
@@ -44,8 +45,8 @@ workers = (config.get('workers','list')).split(" ")
 
 script = ""
 if   service == 'start':
-    cmd = "voms-proxy-init --valid 168:00 -voms cms"
-    print " CMD: " + cmd
+    cmd = "voms-proxy-init --valid 168:00 -voms cms >& /dev/null"
+    #print " CMD: " + cmd
     os.system(cmd)
     script = 'fibsStartRemoteOn'
 elif service == 'stop':
@@ -58,5 +59,4 @@ else:
 
 for worker in workers:
     cmd = script + ' ' + worker + ' ' + task
-    #print " CMD: " + cmd
     os.system(cmd)

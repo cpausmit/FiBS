@@ -12,27 +12,27 @@ fi
 
 # remove the engine on the remote machine
 pid=`ssh -x $CLIENT \
-     "ps auxw | grep fibsEngine.py | grep $TASK | grep -v grep | tr -s ' ' | cut -d ' ' -f2"`
+     "ps uxw | grep fibsEngine.py | grep $TASK | grep -v grep | tr -s ' ' | cut -d ' ' -f2"`
 
 if [ "$pid" == "" ]
 then
-  echo " No more engine on $CLIENT"
+  echo " No more engine for $USER on $CLIENT"
 else
-  echo " Kill Engine Pid $pid on $CLIENT"
+  echo " Kill Engine Pid $pid for $USER on $CLIENT"
   ssh -x $CLIENT "kill $pid"
 fi
 
 # kill task on the remote machine
 pids=`ssh -x $CLIENT \
-     "ps auxw | grep $TASK.py | grep -v grep | tr -s ' ' | cut -d ' ' -f2"`
+     "ps uxw | grep $TASK.py | grep -v grep | tr -s ' ' | cut -d ' ' -f2"`
 
 if [ "$pids" == "" ]
 then
-  echo " No more task activity ($TASK) on $CLIENT"
+  echo " No more task activity ($TASK) for $USER on $CLIENT"
 else
   for pid in $pids
   do
-    echo " Kill Task ($TASK) Pid $pid on $CLIENT"
+    echo " Kill Task ($TASK) Pid $pid for $USER on $CLIENT"
     ssh -x $CLIENT "kill $pid"
   done
 fi
