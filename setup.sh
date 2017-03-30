@@ -1,6 +1,6 @@
 export FIBS_BASE=/home/cmsprod/Tools/FiBS
 
-export FIBS_WORK=$HOME/cms/work/fibs
-export FIBS_LOGS=$HOME/cms/logs/fibs
+export FIBS_WORK=/home/cmsprod/cms/work/fibs
+export FIBS_LOGS=/home/cmsprod/cms/logs/fibs
 export PATH=${PATH}:${FIBS_BASE}/bin
 export PYTHONPATH=${PYTHONPATH}:${FIBS_BASE}/python

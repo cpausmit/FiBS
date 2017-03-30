@@ -131,7 +131,6 @@ for opt, arg in opts:
     elif opt == "--configFile":
         configFile = arg
     elif opt == "--debug":
-        debug = int(arg)
 
 # reading detailed configurations
 #--------------------------------
@@ -142,7 +141,7 @@ config.read(configFile)
 base = os.environ.get('FIBS_BASE')
 task = config.get('general','task')
 list = config.get('general','list')
-outerr = config.get('io','outerr')
+outerr = os.environ.get('FIBS_BASE') + '/' + config.get('io','outerr')
 log = outerr + '-' + hostname + '.log'
 
 # inspecting the local setup
