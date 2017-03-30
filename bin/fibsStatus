@@ -9,12 +9,12 @@ then
   exit 1
 fi
 
-isRunning=`ps auxw|grep fibsEngine.py|grep ${TASK}.cfg|grep -v grep|cut -d' ' -f1`
+isRunning=`ps uxw|grep fibsEngine.py|grep ${TASK}.cfg|grep -v grep|cut -d' ' -f1`
 if [ "$isRunning" != "" ]
 then
-  echo "RUNNING -- fibs engine (config:$TASK) is running on $HOSTNAME"
+  echo "RUNNING -- fibs engine (config:$TASK, user:$USER) is running on $HOSTNAME"
 else
-  echo "No engine (config:$TASK) runs on $HOSTNAME."
+  echo "No engine (config:$TASK, user:$USER) runs on $HOSTNAME."
 fi
 
 exit 0

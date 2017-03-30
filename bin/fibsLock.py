@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #---------------------------------------------------------------------------------------------------
 #
-# This is the engine that we can start on a given machine and it will start activity as instructed.
+# This is a script to grab a lock on the database.
 #
 #                                                                        v0 - April 1, 2016 - C.Paus
 #---------------------------------------------------------------------------------------------------

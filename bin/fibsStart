@@ -13,15 +13,15 @@ then
 fi
 
 # test whether there is already something running
-isRunning=`ps auxw|grep fibsEngine.py|grep ${TASK}.cfg|grep -v grep|cut -d' ' -f1`
+isRunning=`ps uxw|grep fibsEngine.py|grep ${TASK}.cfg|grep -v grep|cut -d' ' -f1`
 if [ "$isRunning" != "" ]
 then
-  echo " is already RUNNING -- fibs engine (config:$TASK on $HOSTNAME)"
+  echo " is already RUNNING -- fibs engine (config:$TASK for user:$USER on $HOSTNAME)"
   exit 1
 fi
 
 # start up the engine on this machine
-echo " STARTING the FiBS engine with task $TASK on $HOSTNAME"
+echo " STARTING the FiBS engine with task $TASK for $USER on $HOSTNAME"
 nohup fibsStartEngine $TASK > $FIBS_LOGS/${TASK}-${HOSTNAME}.log 2>&1 &
 
 exit $?

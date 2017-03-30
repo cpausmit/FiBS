@@ -13,7 +13,7 @@ then
 fi
 
 # make sure engine is not yet running
-isEngineRunning=`ps auxw |grep fibsEngine.py | grep ${TASK}.cfg | cut -d' ' -f1`
+isEngineRunning=`ps uxw |grep fibsEngine.py | grep ${TASK}.cfg | cut -d' ' -f1`
 if [ "$isEngineRunning" != "" ]
 then
   echo 'ERROR -- fibs engine is already running. Do not start another one.'

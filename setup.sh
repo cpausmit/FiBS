@@ -1,4 +1,4 @@
-export FIBS_BASE=$HOME/Tools/FiBS
+export FIBS_BASE=$HOME/Panda/FiBS
 
 export FIBS_WORK=$HOME/cms/work/fibs
 export FIBS_LOGS=$HOME/cms/logs/fibs

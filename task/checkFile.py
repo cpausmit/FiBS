@@ -26,7 +26,7 @@ def catalogFile(file):
         if 'XX-CATALOG-XX 0000' in line:
             entry = line.replace('XX-CATALOG-XX 0000 ','')
 
-    print '\n o-o-o OUT o-o-o \n%s\n\n o-o-o ERR o-o-o \n%s'%(out,err)
+    print '\n o-o-o OUT o-o-o \n%s\n\n o-o-o ERR (%d) o-o-o \n%s'%(out,rc,err)
 
     return (out,err,entry)
 
@@ -222,4 +222,3 @@ else:
         cmd = "t2tools.py --action rm --source " +  file
         print ' REMOVE: ' + cmd
         (rc,out,err) = remoteX.executeLocalAction(cmd)
-        

@@ -17,7 +17,7 @@ def testLocalSetup(debug=0):
 
     # See whether we are setup
     base = os.environ.get('FIBS_BASE')
-    if base=='':
+    if base == '':
         print '\n ERROR -- FiBS is not setup FIBS_BASE environment not set.\n'
         sys.exit(1)
 
@@ -145,16 +145,17 @@ list = config.get('general','list')
 outerr = config.get('io','outerr')
 log = outerr + '-' + hostname + '.log'
 
-# make sure now to capture all input and open and close to keep it up to date
-handleStdout = sys.stdout
-sys.stdout = open(log,'a')
-
 # inspecting the local setup
 #---------------------------
 testLocalSetup(debug)
 
 # make sure we have the output directory
 os.system("mkdir -p " + outerr)
+
+# make sure now to capture all input and open and close to keep it up to date
+os.system("touch " + log)
+handleStdout = sys.stdout
+sys.stdout = open(log,'a')
 
 # Grab files from the list (first lock, re-write and unlock)
 #-----------------------------------------------------------
@@ -164,6 +165,9 @@ while True:
 
     files = pullFilesFromList(task,list,nFiles,debug)
     print files
+
+    cmd = 'mkdir -p ' + outerr
+    os.system(cmd)
 
     for file in files:
 
