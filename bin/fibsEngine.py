@@ -129,8 +129,9 @@ for opt, arg in opts:
         print usage
         sys.exit(0)
     elif opt == "--configFile":
-        configFile = arg
+        configFile = os.environ.get('FIBS_CFGS') + '/' + arg + '.cfg'
     elif opt == "--debug":
+        debug = arg
 
 # reading detailed configurations
 #--------------------------------
@@ -141,7 +142,8 @@ config.read(configFile)
 base = os.environ.get('FIBS_BASE')
 task = config.get('general','task')
 list = config.get('general','list')
-outerr = os.environ.get('FIBS_BASE') + '/' + config.get('io','outerr')
+outerr = os.environ.get('FIBS_LOGS') + '/' + config.get('io','outerr')
+taskdir = os.environ.get('FIBS_TASK')
 log = outerr + '-' + hostname + '.log'
 
 # inspecting the local setup
@@ -175,7 +177,7 @@ while True:
         baseFile = baseFile.replace(' ','%')
 
         # execute our task
-        cmd = base + '/task/' + task + ' ' + file \
+        cmd = taskdir + '/' + task + ' ' + file \
             + ' 1> ' + outerr + '/' + baseFile + '-' + hostname + '.out' \
             + ' 2> ' + outerr + '/' + baseFile + '-' + hostname + '.err'
         

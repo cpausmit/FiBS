@@ -13,7 +13,7 @@ then
 fi
 
 # make sure engine is not yet running
-isEngineRunning=`ps uxw |grep fibsEngine.py | grep ${TASK}.cfg | cut -d' ' -f1`
+isEngineRunning=`ps uxw |grep fibsEngine.py | grep ${TASK} | cut -d' ' -f1`
 if [ "$isEngineRunning" != "" ]
 then
   echo 'ERROR -- fibs engine is already running. Do not start another one.'
@@ -26,4 +26,4 @@ fi
 voms-proxy-init --valid 168:00 -voms cms
 
 # start the engine
-fibsEngine.py --configFile=$FIBS_BASE/config/${TASK}.cfg
+fibsEngine.py --configFile=${TASK}

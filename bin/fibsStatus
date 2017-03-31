@@ -9,7 +9,7 @@ then
   exit 1
 fi
 
-isRunning=`ps uxw|grep fibsEngine.py|grep ${TASK}.cfg|grep -v grep|cut -d' ' -f1`
+isRunning=`ps uxw|grep fibsEngine.py|grep ${TASK}|grep -v grep|cut -d' ' -f1`
 if [ "$isRunning" != "" ]
 then
   echo "RUNNING -- fibs engine (config:$TASK, user:$USER) is running on $HOSTNAME"

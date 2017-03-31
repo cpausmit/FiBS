@@ -30,9 +30,8 @@ if len(sys.argv) != 3:
 
 service = sys.argv[1]
 task = sys.argv[2]
+configFile = os.environ.get('FIBS_CFGS') + '/' + task + '.cfg' 
 
-base = os.environ.get('FIBS_BASE')
-configFile = base + '/config/' + task + '.cfg' 
 print ' Config: ' + configFile
 
 # reading detailed configurations

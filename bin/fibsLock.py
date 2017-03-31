@@ -56,7 +56,7 @@ for opt, arg in opts:
         print usage
         sys.exit(0)
     elif opt == "--configFile":
-        configFile = arg
+        configFile = os.environ.get('FIBS_CFGS') + '/' + arg + '.cfg'
     elif opt == "--seconds":
         seconds = int(arg)
     elif opt == "--cmd":

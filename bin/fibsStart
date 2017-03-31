@@ -13,7 +13,7 @@ then
 fi
 
 # test whether there is already something running
-isRunning=`ps uxw|grep fibsEngine.py|grep ${TASK}.cfg|grep -v grep|cut -d' ' -f1`
+isRunning=`ps uxw|grep fibsEngine.py|grep ${TASK}|grep -v grep|cut -d' ' -f1`
 if [ "$isRunning" != "" ]
 then
   echo " is already RUNNING -- fibs engine (config:$TASK for user:$USER on $HOSTNAME)"
