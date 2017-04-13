@@ -1,4 +1,16 @@
 #!/usr/bin/env python
+#===================================================================================================
+# This script checks a given file (argument) which is assumed to be located on the remote Tier-2
+# storage and checks whether it is readable and has the number of events that are expected as
+# derived from the input source. Files that are not compliant are deleted.
+#
+# Assuming now the file is complete. If the file is still located in a temporary directory it will
+# be moved into its final location. If there is already a complete file in that location the new
+# file will be deleted.
+#
+# The script relies on the catalogFile.sh script to be in its path. This script is responsible to
+# perfrom the various tests on the file.
+#===================================================================================================
 import os,sys,subprocess
 import MySQLdb
 import rex
