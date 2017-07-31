@@ -15,6 +15,8 @@ import os,sys,subprocess
 import MySQLdb
 import rex
 
+## Prefix = os.getenv('KRAKEN_TMP_PREFIX')
+Prefix = "tmp_0_"
 Db = MySQLdb.connect(read_default_file="/etc/my.cnf",read_default_group="mysql",db="Bambu")
 Cursor = Db.cursor()
 
@@ -56,7 +58,7 @@ def getFinalFile(file):
 
     finalFile = file
 
-    if 'crab_' in file:
+    if Prefix in file:
         f = file.split('/')
         tmp = f[-1].replace('_tmp','') 
         finalFile = "/".join(f[:-2])
@@ -77,7 +79,7 @@ def getRequestId(file):
         return (requestId, datasetId)
         
 
-    if 'crab_' in file:
+    if Prefix in file:
         dataset = f[-3]
         version = f[-4]
         mitcfg = f[-5]
@@ -88,6 +90,9 @@ def getRequestId(file):
 
     # decode the dataset
     f = dataset.split('+')
+    if len(f) < 3:
+        print " ERROR - dataset name not correctly formed: " + dataset
+        sys.exit(0)
     process = f[0]
     setup = f[1]
     tier = f[2]
@@ -123,25 +128,6 @@ def numberOfEventsInEntry(entry):
 
     return nEvents
 
-def loadEnv():
-    # make sure to setup the environment
-    rc = 0
-    base = os.environ.get('FIBS_BASE')
-    if os.path.exists(base + '/config/checkFile.bash'):
-        cmd = 'bash -c ' + base + '/config/checkFile.bash'
-        list = cmd.split(" ")
-        p = subprocess.Popen(list,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-        (out, err) = p.communicate()
-        rc = p.returncode
-        for line in out.split("\n"):
-            (key, _, value) = line.partition("=")
-            os.environ[key] = value
-        print ' INFO - special environment for checkFile.py was loaded.'
-    else:
-        print ' INFO - special environment needed.'
-
-    return rc
-
 def makeDatabaseEntry(requestId,fileName,nEvents):
 
     sql = "insert into Files(RequestId,FileName,NEvents) " \
@@ -150,8 +136,12 @@ def makeDatabaseEntry(requestId,fileName,nEvents):
     try:
         # Execute the SQL command
         Cursor.execute(sql)
-    except:
-        print 'ERROR(%s) - could not insert new file.'%(sql)
+    except MySQLdb.IntegrityError as e:
+        if not e[0] == 1062:
+            print 'ERROR(%s) - could not insert new file.'%(sql)
+            raise
+        else:
+            print " WARNING -- entry was already in table." 
 
 def getNEventsLfn(datasetId,fileName):
 
@@ -183,9 +173,6 @@ if len(sys.argv) < 1:
     print " ERROR -- " + usage
     sys.exit(1)
 
-# make sure the environment is what we want
-loadEnv()
-
 # command line variables
 file = sys.argv[1]
 print " INFO - checkFile.py %s"%(file)     
@@ -195,7 +182,7 @@ print " INFO - checkFile.py %s"%(file)
 nEvents = numberOfEventsInEntry(entry)
 
 delete = False
-if 'zombie' in out:
+if "Object is in 'zombie' state" in out:
     delete = True
     print '\n o=o=o=o File corrupt, schedule deletion. o=o=o=o \n'
 
@@ -216,7 +203,7 @@ remoteX = rex.Rex('none','none')
 if nEvents == nEventsLfn and nEvents>0:
     # now move file to final location
     finalFile = getFinalFile(file)
-    if 'crab_' in file:
+    if Prefix in file:
         cmd = "t2tools.py --action mv --source " +  file + " --target " + finalFile
         print ' MOVE: ' + cmd
         (rc,out,err) = remoteX.executeLocalAction(cmd)
