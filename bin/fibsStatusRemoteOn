@@ -1,6 +1,6 @@
 #!/bin/bash
 #---------------------------------------------------------------------------------------------------
-# Startup FiBS engine on a given machine with specific log file.
+# Check status of FiBS engine on this machine.
 #---------------------------------------------------------------------------------------------------
 CLIENT="$1"
 TASK="$2"

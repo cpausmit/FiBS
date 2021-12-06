@@ -3,7 +3,7 @@
 # FiBS services.
 #
 #---------------------------------------------------------------------------------------------------
-import os,sys
+import os,sys,re
 import ConfigParser
 
 #===================================================================================================
@@ -40,7 +40,9 @@ config = ConfigParser.RawConfigParser()
 config.read(configFile)
 
 # get our worker list
-workers = (config.get('workers','list')).split(" ")
+list = re.sub(' +',' ',config.get('workers','list'))
+workers = list.split(" ")
+workers_list = ','.join(workers)
 
 script = ""
 if   service == 'start':
@@ -48,14 +50,23 @@ if   service == 'start':
     #print " CMD: " + cmd
     os.system(cmd)
     script = 'fibsStartRemoteOn'
+    script_local = 'fibsStart'
 elif service == 'stop':
     script = 'fibsStopRemoteOn'
+    script_local = 'fibsStop'
 elif service == 'status':
     script = 'fibsStatusRemoteOn'
+    script_local = 'fibsStatus'
 else:
     print '\n ERROR - service command not known: %s\n\n%s'%(service,usage)
     sys.exit(1)
 
-for worker in workers:
-    cmd = script + ' ' + worker + ' ' + task
-    os.system(cmd)
+# parallel processing
+cmd = "pdsh -w %s %s %s | sort"%(workers_list,script_local,task)
+rc = os.system(cmd)
+
+# go one-by-one in case of failure
+if rc != 0:
+    for worker in workers:
+        cmd = script + ' ' + worker + ' ' + task
+        os.system(cmd)
