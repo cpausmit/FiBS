@@ -11,7 +11,8 @@
 # The script relies on the catalogFile.sh script to be in its path. This script is responsible to
 # perfrom the various tests on the file.
 #===================================================================================================
-import os,sys,subprocess
+import os,sys,subprocess,time,json
+import requests
 import MySQLdb
 import rex
 
@@ -20,11 +21,17 @@ Prefix = "tmp_0_"
 Db = MySQLdb.connect(read_default_file="/etc/my.cnf",read_default_group="mysql",db="Bambu")
 Cursor = Db.cursor()
 
+DYNAMO_HOST = 't3serv009.mit.edu'
+CERT = '/tmp/x509up_u%d' % os.getuid()
+
 usage = "\n   usage:  checkFile.py  <file> \n"
 
 #===================================================================================================
 #  H E L P E R S
 #===================================================================================================
+def makeLfn(finalFile):
+    return "/"+"/".join(finalFile.split("/")[2:])
+
 def catalogFile(file):
     # perfrom cataloging operation on one file (return the entry)
 
@@ -43,6 +50,17 @@ def catalogFile(file):
     print '\n o-o-o OUT o-o-o \n%s\n\n o-o-o ERR (%d) o-o-o \n%s'%(out,rc,err)
 
     return (out,err,entry)
+
+def findFileSize(file):
+
+    fileSize = 0
+    cmd = "t2tools.py --action ls --source " +  file
+    print ' LIST: ' + cmd
+    (rc,out,err) = remoteX.executeLocalAction(cmd)
+    fileSize = long((out.split(" ")[0]).split(":")[1])
+    print ' SIZE: %ld'%fileSize 
+
+    return fileSize
 
 def getName(file):
     # extract the unique file name
@@ -66,11 +84,12 @@ def getFinalFile(file):
         
     return finalFile
 
-def getRequestId(file):
+def getFileInfo(file):
     # extract the unique request id this file is part of
 
     requestId = -1
     datasetId = -1
+    blockName = ""
 
     f = file.split('/')
 
@@ -97,10 +116,14 @@ def getRequestId(file):
     setup = f[1]
     tier = f[2]
 
-    sql = "select RequestId, Datasets.DatasetId from Requests inner join Datasets on " \
-        + " Datasets.DatasetId = Requests.DatasetId where " \
+    sql = "select RequestId, Datasets.DatasetId, BlockName, Lfns.NEvents from Requests" \
+        + " inner join Datasets on Datasets.DatasetId = Requests.DatasetId" \
+        + " inner join Blocks on Blocks.DatasetId = Datasets.DataSetId" \
+        + " inner join Lfns on Lfns.BlockId = Blocks.BlockId" \
+        + " where " \
         + " DatasetProcess = '%s' and DatasetSetup='%s' and DatasetTier='%s'"%(process,setup,tier) \
-        + " and RequestConfig = '%s' and RequestVersion = '%s'"%(mitcfg,version)
+        + " and RequestConfig = '%s' and RequestVersion = '%s'"%(mitcfg,version) \
+        + " and Lfns.FileName = '%s' "%(getName(file))
 
     print ' SQL - ' + sql
 
@@ -115,8 +138,10 @@ def getRequestId(file):
     for row in results:
         requestId = int(row[0])
         datasetId = int(row[1])
+        blockName = row[2]
+        nEventsLfn = int(row[3])
 
-    return (requestId, datasetId)
+    return (requestId, datasetId, blockName, nEventsLfn, mitcfg, version, dataset)
 
 def numberOfEventsInEntry(entry):
     # extract the number of events in a given catalog entry
@@ -128,10 +153,10 @@ def numberOfEventsInEntry(entry):
 
     return nEvents
 
-def makeDatabaseEntry(requestId,fileName,nEvents):
+def makeDatabaseEntry(requestId,fileName,nEvents,fileSize):
 
-    sql = "insert into Files(RequestId,FileName,NEvents) " \
-        + " values(%d,'%s',%d)"%(requestId,fileName,nEvents)
+    sql = "insert into Files(RequestId,FileName,NEvents,SizeBytes) " \
+        + " values(%d,'%s',%d,%ld)"%(requestId,fileName,nEvents,fileSize)
     print ' SQL: ' + sql
     try:
         # Execute the SQL command
@@ -142,28 +167,6 @@ def makeDatabaseEntry(requestId,fileName,nEvents):
             raise
         else:
             print " WARNING -- entry was already in table." 
-
-def getNEventsLfn(datasetId,fileName):
-
-    nEvents = -1
-
-    sql = "select FileName, PathName, NEvents from Lfns where DatasetId = %d and FileName = '%s'"\
-        %(datasetId,fileName)
-    print ' SQL - ' + sql
-    try:
-        # Execute the SQL command
-        Cursor.execute(sql)
-        results = Cursor.fetchall()
-    except:
-        print 'ERROR(%s) - could not find request id.'%(sql)
-
-    # found the request Id
-    for row in results:
-        name = row[0]
-        path = row[1]
-        nEvents = int(row[2])
-
-    return nEvents
 
 #===================================================================================================
 #  M A I N
@@ -177,23 +180,20 @@ if len(sys.argv) < 1:
 file = sys.argv[1]
 print " INFO - checkFile.py %s"%(file)     
             
-# doing the cataloging here
+# doing the cataloging here: result is the number of events found in the file
 (out,err,entry) = catalogFile(file)
 nEvents = numberOfEventsInEntry(entry)
 
 delete = False
-if "Object is in 'zombie' state" in out:
+if "Object is in 'zombie' state" in out or nEvents == -1:
     delete = True
     print '\n o=o=o=o File corrupt, schedule deletion. o=o=o=o \n'
 
 print ' CATALOG: %d -- %s'%(nEvents,file)
 
-# find all relevant Ids
+# find all relevant infromation about the file
 fileName = getName(file)
-(requestId,datasetId) = getRequestId(file)
-
-# find corresponding lfn
-nEventsLfn = getNEventsLfn(datasetId,fileName)
+(requestId,datasetId,blockName,nEventsLfn,config,version,dataset) = getFileInfo(file)
 
 print ' Compare: %d [lfn] and %d [output]'%(nEventsLfn,nEvents)
 
@@ -203,6 +203,9 @@ remoteX = rex.Rex('none','none')
 if nEvents == nEventsLfn and nEvents>0:
     # now move file to final location
     finalFile = getFinalFile(file)
+    fileSize = findFileSize(file)
+    
+
     if Prefix in file:
         cmd = "t2tools.py --action mv --source " +  file + " --target " + finalFile
         print ' MOVE: ' + cmd
@@ -217,7 +220,7 @@ if nEvents == nEventsLfn and nEvents>0:
                 
     
     # add a new catalog entry
-    makeDatabaseEntry(requestId,fileName,nEvents)
+    makeDatabaseEntry(requestId,fileName,nEvents,fileSize)
 
 else:
     print ' ERROR: event counts disagree or not positive (LFN %d,File %d). EXIT!'%\

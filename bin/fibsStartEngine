@@ -25,5 +25,10 @@ fi
 # get a valid certificate
 voms-proxy-init --valid 168:00 -voms cms
 
+if [ -e "$FIBS_BASE/config/${TASK}.bash" ]
+then
+  source $FIBS_BASE/config/${TASK}.bash
+fi
+
 # start the engine
 fibsEngine.py --configFile=${TASK}

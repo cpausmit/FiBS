@@ -5,7 +5,8 @@
 #
 #                                                                        v0 - April 1, 2016 - C.Paus
 #---------------------------------------------------------------------------------------------------
-import os,sys,getopt,re,ConfigParser,time,socket
+import os,sys,getopt,re,time,socket
+import configparser as ConfigParser
 import dblock
 
 #===================================================================================================

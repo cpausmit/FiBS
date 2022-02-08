@@ -27,10 +27,14 @@ then
   echo " Start deleting $nDelete files (oldest ones)."
   files=`head -$nDelete /tmp/FiBS_logs.$$ | cut -d ' ' -f2`
   rm -f /tmp/FiBS_logs.$$
+  i=0
   for file in $files
   do
-    echo " Deleting: $file"
+    if [ $((i % 100)) == 0 ]; then
+      echo " Deleting (print 1/100, total: $i/$nDelete): $file"
+    fi
     rm $file
+    i=$((i + 1))
   done
 else
   rm -f /tmp/FiBS_logs.$$

@@ -43,11 +43,11 @@ class dblock(object):
             # Execute the SQL command
             Cursor.execute(self.acquireSql)
             if self.debug:
-                print 'Acquired lock: %s' % self.fddr()
+                print('Acquired lock: %s' % self.fddr())
         except:
             if self.debug:
                 lock = self._readlock()
-                print 'Existing lock detected: %s' % self.pddr(lock)
+                print('Existing lock detected: %s' % self.pddr(lock))
             return False
 
         return self
@@ -60,9 +60,9 @@ class dblock(object):
                 # Execute the SQL command
                 Cursor.execute(self.releaseSql)
                 if self.debug:
-                    print 'Released lock: %s' % self.fddr()
+                    print('Released lock: %s' % self.fddr())
             except:
-                print " Error (%s): unable to release lock."%(self.releaseSql)
+                print(" Error (%s): unable to release lock."%(self.releaseSql))
                 raise (self.DatabaseLockReleaseError,
                        'Error releasing lock: %s' % self.fddr())
         return self
@@ -78,13 +78,13 @@ class dblock(object):
             if   len(results) == 0:
                 lock['path'], lock['host'], lock['pid'] = [ self.path, '', 0 ]                
             elif len(results) > 1:
-                print ' WARNING -- did not find unique result! (n=%d)'%(len(results)) 
+                print(' WARNING -- did not find unique result! (n=%d)'%(len(results)))
                 lock['path'], lock['host'], lock['pid'] = [ self.path, '', 0 ]
             else:
                 for row in results:
                     lock['path'], lock['host'], lock['pid'] = row
         except:
-            print " Error (%s): unable to list locks."%(self.listSql)
+            print(" Error (%s): unable to list locks."%(self.listSql))
             lock['path'], lock['host'], lock['pid'] = [ self.path, '', 0 ]
 
         return lock

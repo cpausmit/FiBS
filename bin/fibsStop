@@ -1,0 +1,40 @@
+#!/bin/bash
+#---------------------------------------------------------------------------------------------------
+# Stop daemon for FiBS engine on a given machine with specific log file
+#---------------------------------------------------------------------------------------------------
+# make sure the system has been setup
+[ -z "$FIBS_BASE" ] && ( echo "FIBS is not setup. EXIT! (add to .bashrc)"; exit 1; )
+
+TASK="$1"
+if [ "$TASK" == "" ]
+then
+  echo ""; echo " Please specify task as parameter. EXIT!"; echo ""
+  exit 1
+fi
+
+# remove the engine on the machine
+pid=`ps uxw | grep fibsEngine.py | grep $TASK | grep -v grep | tr -s ' ' | cut -d ' ' -f2`
+
+if [ "$pid" == "" ]
+then
+  echo " No more engine for $USER on $CLIENT"
+else
+  echo " Kill Engine Pid $pid for $USER on $CLIENT"
+  kill $pid
+fi
+
+# remove the worker process(es)
+pids=`ps uxw | grep $TASK.py | grep -v grep | tr -s ' ' | cut -d ' ' -f2`
+
+if [ "$pids" == "" ]
+then
+  echo " No more task activity ($TASK) for $USER on $CLIENT"
+else
+  for pid in $pids
+  do
+    echo " Kill Task ($TASK) Pid $pid for $USER"
+    kill $pid
+  done
+fi
+
+exit 0
