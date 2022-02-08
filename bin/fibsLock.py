@@ -36,9 +36,9 @@ usage += "                    [ --help ]\n\n"
 valid = ['configFile=','cmd=','seconds=','debug=','help']
 try:
     opts, args = getopt.getopt(sys.argv[1:], "", valid)
-except getopt.GetoptError, ex:
-    print usage
-    print str(ex)
+except getopt.GetoptError as ex:
+    print(usage)
+    print(str(ex))
     sys.exit(1)
 
 # --------------------------------------------------------------------------------------------------
@@ -53,7 +53,7 @@ cmd = ''
 # Read new values from the command line
 for opt, arg in opts:
     if   opt == "--help":
-        print usage
+        print(usage)
         sys.exit(0)
     elif opt == "--configFile":
         configFile = os.environ.get('FIBS_CFGS') + '/' + arg + '.cfg'
@@ -67,13 +67,13 @@ for opt, arg in opts:
 # make sure we have a working setup
 
 if not os.path.exists(configFile):
-    print '\n ERROR - no configuration specified.\n'
-    print usage
+    print('\n ERROR - no configuration specified.\n')
+    print(usage)
     sys.exit(1)
 
 if cmd == '':
-    print '\n ERROR - no shell command specified.\n'
-    print usage
+    print('\n ERROR - no shell command specified.\n')
+    print(usage)
     sys.exit(1)
 
 # reading detailed configurations
@@ -92,7 +92,7 @@ lock = establishLock(task,debug)
 
 # now consider our options
 if   cmd != '':
-    print ' Executing: ' + cmd
+    print(' Executing: ' + cmd)
     os.system(cmd)
 elif seconds >= 0:
     time.sleep(seconds)
@@ -101,6 +101,6 @@ else:
 
 # release the lock
 lock.release()
-print '\n Exiting.'
+print('\n Exiting.')
         
 sys.exit(0)

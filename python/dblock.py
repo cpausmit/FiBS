@@ -3,7 +3,12 @@ import os
 import socket
 import MySQLdb
 
-Db = MySQLdb.connect(read_default_file="/etc/my.cnf",read_default_group="mysql",db="Fibs")
+MY_CNF = "%s/.mysql/my.cnf"%(os.getenv('HOME'))
+if not os.path.exists(MY_CNF):
+    MY_CNF = "/etc//my.cnf"
+
+print(" OPEN DB.")
+Db = MySQLdb.connect(read_default_file="%s"%(MY_CNF),read_default_group="mysql",db="Fibs")
 Cursor = Db.cursor()
 
 class dblock(object):
