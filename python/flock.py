@@ -28,14 +28,14 @@ class flock(object):
         if self.islocked():
             if self.debug:
                 lock = self._readlock()
-                print 'Previous lock detected: %s' % self.pddr(lock)
+                print('Previous lock detected: %s' % self.pddr(lock))
             return False
         try:
             fh = open(self.path, 'w')
             fh.write(self.addr())
             fh.close()
             if self.debug:
-                print 'Acquired lock: %s' % self.fddr()
+                print('Acquired lock: %s' % self.fddr())
         except:
             if os.path.isfile(self.path):
                 try:
@@ -52,7 +52,7 @@ class flock(object):
             try:
                 os.unlink(self.path)
                 if self.debug:
-                    print 'Released lock: %s' % self.fddr()
+                    print('Released lock: %s' % self.fddr())
             except:
                 raise (self.FileLockReleaseError,
                        'Error releasing lock: %s' % self.fddr())
