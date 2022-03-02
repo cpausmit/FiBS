@@ -18,7 +18,7 @@ def testLocalSetup(debug=0):
     # See whether we are setup
     base = os.environ.get('FIBS_BASE')
     if base == '':
-        print '\n ERROR -- FiBS is not setup FIBS_BASE environment not set.\n'
+        print('\n fibsEngine: ERROR -- FiBS is not setup FIBS_BASE environment not set.\n')
         sys.exit(1)
 
     return
@@ -36,45 +36,51 @@ def establishLock(task,debug):
 
 def readList(listFile,debug):
     # read the list of files into memory
-
-    fileList = []
-
+    tmp = []
     if os.path.exists(os.environ.get('FIBS_WORK')+'/'+listFile):
-        fileList = open(os.environ.get('FIBS_WORK')+'/'+listFile).read().split('\n')
+        with open(os.environ.get('FIBS_WORK')+'/'+listFile) as fH:
+            tmp = fH.read().split('\n')
+
+    # make sure to clean list from invalid entries
+    fileList = []
+    for f in tmp:
+        if f.strip() != '':
+            fileList.append(f)
 
     if debug>0:
-        print ' readList -- Found %d files.'%(len(fileList))
+        print(' fibsEngine: readList -- Found %d files.'%(len(fileList)))
+        print(fileList)
 
     return fileList
 
 def writeList(listFile,fileList,debug):
     # write the list of files from memory back to the file
 
-    fileH = open(os.environ.get('FIBS_WORK')+'/'+listFile,'w')
-    for file in fileList:
-        if file != '':   # avoid empty lines
-            fileH.write(file + '\n')
-    fileH.close()
+    with open(os.environ.get('FIBS_WORK')+'/'+listFile,'w') as fH:
+        for file in fileList:
+            if file != '':   # avoid empty lines
+                fH.write(file + '\n')
 
     if debug>0:
-        print ' writeList -- Found %d files.'%(len(fileList))
+        print(' fibsEngine: writeList -- Found %d files.'%(len(fileList)))
+        print(fileList)
 
     return fileList
 
-def getFiles(fileList,nFiles,debug):
-    # take out the first nFiles entries of the list
+def getFiles(fileList,nentries,debug):
+    # take out the first nentries from the list
 
     n = 0
     files = []
     for file in fileList:
         files.append(file)
         n += 1
-        if n >= nFiles: # we got nFiles out
+        if n >= nentries: # we got nentries out
             break
 
-    return (files,fileList[nFiles:])
+    return (files,fileList[nentries:])
 
-def pullFilesFromList(task,listFile,nFiles,debug):
+def pullFilesFromList(task,listFile,nentries,debug):
     # pull a given number of files from a list of files that are stored in a file the tricky bit
     # is that there are several asyncronous processes running and a lock has to be established
 
@@ -85,7 +91,7 @@ def pullFilesFromList(task,listFile,nFiles,debug):
     fileList = readList(listFile,debug)
     
     # get files to work on
-    (files,fileList) = getFiles(fileList,nFiles,debug)
+    (files,fileList) = getFiles(fileList,nentries,debug)
 
     # now write the remainig list back to the file
     writeList(listFile,fileList,debug)
@@ -100,16 +106,17 @@ def pullFilesFromList(task,listFile,nFiles,debug):
 #===================================================================================================
 # Define string to explain usage of the script
 usage =  " Usage: fibsEngine.py   --configFile=<file with full config>\n"
+usage += "                        --instance=0            <-- the instance on this machine\n"
 usage += "                      [ --debug=0 ]             <-- see various levels of debug output\n"
 usage += "                      [ --help ]\n"
 
 # Define the valid options which can be specified and check out the command line
-valid = ['configFile=','debug=','help']
+valid = ['configFile=','instance=','debug=','help']
 try:
     opts, args = getopt.getopt(sys.argv[1:], "", valid)
 except getopt.GetoptError, ex:
-    print usage
-    print str(ex)
+    print(usage)
+    print(str(ex))
     sys.exit(1)
 
 # --------------------------------------------------------------------------------------------------
@@ -119,32 +126,38 @@ except getopt.GetoptError, ex:
 
 # keeping track of the hostname
 hostname = socket.gethostname()
-nFiles = 1
-debug = 0
+nentries = 1
+instance = '0'
+debug = 2
 configFile = ''
 
 # Read new values from the command line
 for opt, arg in opts:
     if   opt == "--help":
-        print usage
+        print(usage)
         sys.exit(0)
     elif opt == "--configFile":
         configFile = os.environ.get('FIBS_CFGS') + '/' + arg + '.cfg'
+    elif opt == "--instance":
+        instance = arg
     elif opt == "--debug":
         debug = arg
+
 
 # reading detailed configurations
 #--------------------------------
 config = ConfigParser.RawConfigParser()
 config.read(configFile)
-
-# get our parameters as needed
-base = os.environ.get('FIBS_BASE')
 task = config.get('general','task')
+if config.has_option('general','nentries'):
+    nentries = int(config.get('general','nentries'))
 list = config.get('general','list')
+
+# get our environment parameters as needed
+base = os.environ.get('FIBS_BASE')
 outerr = os.environ.get('FIBS_LOGS') + '/' + config.get('io','outerr')
 taskdir = os.environ.get('FIBS_TASK')
-log = outerr + '-' + hostname + '.log'
+log = outerr + '-' + hostname + '_' + instance + '.log'
 
 # inspecting the local setup
 #---------------------------
@@ -161,16 +174,25 @@ sys.stdout = open(log,'a')
 # Grab files from the list (first lock, re-write and unlock)
 #-----------------------------------------------------------
 
+# -- testing with a limited duration queue (engine will exit once work is done)
+# files = ['0','1']
+# while len(files) > 0:
+
 # -- stay in there and let job develop
 while True:
 
-    files = pullFilesFromList(task,list,nFiles,debug)
-    print files
+    files = pullFilesFromList(task,list,nentries,debug)
+    print(files)
 
     cmd = 'mkdir -p ' + outerr
+    if debug>0:
+        print(" fibsEngine: Make dir  %s"%(cmd))
     os.system(cmd)
 
     for file in files:
+
+        if debug>0:
+            print(" fibsEngine: processing  %s"%(file))
 
         # get base file
         baseFile = (file.split('/')).pop()
@@ -178,20 +200,20 @@ while True:
 
         # execute our task
         cmd = taskdir + '/' + task + ' ' + file \
-            + ' 1> ' + outerr + '/' + baseFile + '-' + hostname + '.out' \
-            + ' 2> ' + outerr + '/' + baseFile + '-' + hostname + '.err'
+            + ' 1> ' + outerr + '/' + baseFile + '-' + hostname + '_' + instance + '.out' \
+            + ' 2> ' + outerr + '/' + baseFile + '-' + hostname + '_' + instance + '.err'
         
         if file != '':
-            print ' fibsEngine: next task: %s'%(cmd)
+            print(' fibsEngine: next task: %s'%(cmd))
             os.system(cmd)
         else:
-            print ' fibsEngine: there is no work here to be done. (sleep 10)'
-            time.sleep(10)
+            print(' fibsEngine: there is no work here to be done. (sleep 5)')
+            time.sleep(5)
 
     # when the list is empty take some time to ask for more
     if len(files) == 0:
         if debug > 1:
-            print '\n List is empty: waiting for 30 secs.'
-        time.sleep(30)
+            print('\n fibsEngine: List is empty: waiting for 10 secs.')
+        time.sleep(10)
   
 sys.exit(0)

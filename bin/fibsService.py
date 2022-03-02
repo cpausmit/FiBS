@@ -4,12 +4,18 @@
 #
 #---------------------------------------------------------------------------------------------------
 import os,sys,re
-import configparser as ConfigParser
+try: # Python 2 only:
+    import ConfigParser as ConfigParser
+except ImportError:
+    # Python 2 and 3 (after ``pip install configparser``)
+    import configparser as ConfigParser
+
+DEBUG = 0
 
 #===================================================================================================
 #  H E L P E R S
 #===================================================================================================
-def testLocalSetup(debug=0):
+def testLocalSetup():
     # The local setup needs a number of things to be present. Make sure all is there, or complain.
 
     # See whether we are setup
@@ -41,6 +47,10 @@ config.read(configFile)
 
 # get our worker list
 list = re.sub(' +',' ',config.get('workers','list'))
+nprocesses = 1
+if config.has_option('workers','nprocesses'):
+    nprocesses = int(config.get('workers','nprocesses'))
+
 workers = list.split(" ")
 workers_list = ','.join(workers)
 
@@ -62,7 +72,9 @@ else:
     sys.exit(1)
 
 # parallel processing
-cmd = "pdsh -R ssh -w %s %s %s | sort"%(workers_list,script_local,task)
+cmd = "pdsh -R ssh -w %s %s %s %d | sort"%(workers_list,script_local,task,nprocesses)
+if DEBUG > 0:
+    print(cmd)
 rc = os.system(cmd)
 
 # go one-by-one in case of failure

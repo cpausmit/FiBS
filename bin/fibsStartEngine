@@ -1,15 +1,20 @@
 #!/bin/bash
 #---------------------------------------------------------------------------------------------------
-# Startup daemon for the dropbox copy on this machine
+# Startup daemon on this machine
 #---------------------------------------------------------------------------------------------------
 # make sure the system has been setup
 [ -z "$FIBS_BASE" ] && ( echo "FIBS is not setup. EXIT! (add to .bashrc)"; exit 1; )
 
 TASK="$1"
+N_INSTANCE=0
 if [ "$TASK" == "" ]
 then
   echo ""; echo " Please specify task as parameter. EXIT!"; echo ""
   exit 1
+fi
+if [ ".$2" != "." ]
+then
+  N_INSTANCE=$2
 fi
 
 # make sure engine is not yet running
@@ -30,5 +35,5 @@ then
   source $FIBS_BASE/config/${TASK}.bash
 fi
 
-# start the engine
-fibsEngine.py --configFile=${TASK}
+# start the engines
+fibsEngine.py --instance=$N_INSTANCE --configFile=${TASK}

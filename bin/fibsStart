@@ -6,10 +6,15 @@
 [ -z "$FIBS_BASE" ] && ( echo "FIBS is not setup. EXIT! (add to .bashrc)"; exit 1; )
 
 TASK="$1"
+NP=1
 if [ "$TASK" == "" ]
 then
   echo ""; echo " Please specify task as parameter. EXIT!"; echo ""
   exit 1
+fi
+if [ ".$2" != "" ]
+then
+  NP=$2
 fi
 
 # test whether there is already something running
@@ -21,7 +26,12 @@ then
 fi
 
 # start up the engine on this machine
-echo " STARTING the FiBS engine with task $TASK for $USER on $HOSTNAME"
-nohup fibsStartEngine $TASK > $FIBS_LOGS/${TASK}-${HOSTNAME}.log 2>&1 &
+i=0
+while [ $i -ne $NP ]
+do
+  i=$(($i+1))
+  echo " STARTING the FiBS engine ($i) with task $TASK for $USER on $HOSTNAME"
+  nohup fibsStartEngine $TASK $i > $FIBS_LOGS/${TASK}-${HOSTNAME}.log 2>&1 &
+done
 
 exit $?
