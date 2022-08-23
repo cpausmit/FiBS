@@ -22,7 +22,7 @@ def showSetup(firstTime,fHandle):
     fileH.write(" user executing: " + os.getenv('USER','unknown user') + "\n")
     fileH.write(" running on    : %s\n"%(socket.gethostname()))
     fileH.write(" executing in  : %s\n"%(os.getcwd()))
-    fileH.write(" arguments:      %s\n"%(" ".join(sys.argv[1:])))
+    fileH.write(" arguments     : %s\n"%(" ".join(sys.argv[1:])))
     fileH.write(" \n")
 
     return
@@ -31,7 +31,7 @@ def showSetupStd():
     print(" user executing: " + os.getenv('USER','unknown user'))
     print(" running on    : %s"%(socket.gethostname()))
     print(" executing in  : %s"%(os.getcwd()))
-    print(" arguments:      %s"%(" ".join(sys.argv[1:])))
+    print(" arguments     : %s"%(" ".join(sys.argv[1:])))
     print(" time now      : %s"%(str(datetime.datetime.now())))
     print(" ")
 
