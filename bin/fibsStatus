@@ -13,6 +13,10 @@ isRunning=`ps uxw|grep fibsEngine.py|grep ${TASK}|grep -v grep|cut -d' ' -f1`
 if [ "$isRunning" != "" ]
 then
   echo "RUNNING -- fibs engine (config:$TASK, user:$USER) is running on $HOSTNAME"
+  if [ ".$FIBS_DEBUG" != ".0" ]
+  then
+    ps uxw | grep -v fibsEngine.py |grep task/${TASK}
+  fi
 else
   echo "No engine (config:$TASK, user:$USER) runs on $HOSTNAME."
 fi

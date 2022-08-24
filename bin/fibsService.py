@@ -76,6 +76,7 @@ cmd = "pdsh -R ssh -w %s %s %s %d | sort"%(workers_list,script_local,task,nproce
 if DEBUG > 0:
     print(cmd)
 rc = os.system(cmd)
+#rc = 1
 
 # go one-by-one in case of failure
 if rc != 0:

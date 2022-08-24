@@ -6,7 +6,10 @@
 #
 #                                                                        v0 - April 1, 2016 - C.Paus
 #---------------------------------------------------------------------------------------------------
-import os,sys,getopt,re,ConfigParser,time,socket
+import os,sys,getopt,re,time,socket
+#import configparser as ConfigParser
+import ConfigParser
+
 import dblock
 
 #===================================================================================================
@@ -114,7 +117,7 @@ usage += "                      [ --help ]\n"
 valid = ['configFile=','instance=','debug=','help']
 try:
     opts, args = getopt.getopt(sys.argv[1:], "", valid)
-except getopt.GetoptError, ex:
+except getopt.GetoptError as ex:
     print(usage)
     print(str(ex))
     sys.exit(1)

@@ -31,7 +31,9 @@ while [ $i -ne $NP ]
 do
   i=$(($i+1))
   echo " STARTING the FiBS engine ($i) with task $TASK for $USER on $HOSTNAME"
-  nohup fibsStartEngine $TASK $i > $FIBS_LOGS/${TASK}-${HOSTNAME}.log 2>&1 &
+  echo "\
+  nohup fibsStartEngine $TASK $i > $FIBS_LOGS/${TASK}-${i}-${HOSTNAME}.log 2>&1 &"
+  nohup fibsStartEngine $TASK $i > $FIBS_LOGS/${TASK}-${i}-${HOSTNAME}.log 2>&1 &
 done
 
 exit $?
