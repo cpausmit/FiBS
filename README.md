@@ -21,9 +21,9 @@ Edit the setup.sh file to your needs. and make sure to source it so the environm
 
 ## Running a simple task: fake
 
-Make directories named $FIBS+WORK and $FIBS_LOGS which are defined in the setup.sh script:
+Make directories named $FIBS_WORK and $FIBS_LOGS which are defined in the setup.sh script:
 
-    mkdir -p $FIBS+WORK $FIBS_LOGS
+    mkdir -p $FIBS_WORK $FIBS_LOGS
 
 Make an executable task, and a configure executable. In the task write what you want to do with the task, and with the configure executable for the task write a task name (it should be the same as the task executable name) make a list for the task to run, make the nuber of entries that the task completes at a time, write a error code, then write a list of workers to execute the task, and then assign the number of processes the workers take in. This is an example of the configurement of a task named fake:
  
