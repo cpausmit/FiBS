@@ -18,6 +18,10 @@ To download the software use git clone:
 
 ## Running a simple task: fake
 
+Make sure to execute install.sh so setup.sh will be made
+
+    ./Fibs/install.sh
+
 Edit the setup.sh file to your needs. and make sure to source it so the environment is set. You will have to add this to your .bashrc file so that FiBS is always setup when login in. 
 
     emacs -nw ./FiBS/setup.sh
@@ -45,7 +49,7 @@ Make an executable task, and a configure executable. In the task write what you 
 
 Once everything is written run one test task to see whther it works:
 
-     ./FiBS/task.fake.py fake-argument
+     ./FiBS/task/fake.py fake-argument
 
 Now prepare a list of tasks inside the FIBS_WORK name it fake.list, and inside it could look like this:
 
@@ -64,11 +68,11 @@ Check the status with:
     
 ## Trouble Shooting
 
-if at any point some of the commands do not work check the environment, and make sure the setup was in the .bashrc file and where sourced
+If at any point some of the commands do not work check the environment, and make sure the setup was in the .bashrc file and where sourced
 
 Make sure that you do not need to type in any password to access any of the workers
 
-You can also stop the batch system. IT is recommened to do so once all work is done because it keeps running until you tell it to stop.
+You can also stop the batch system. It is recommened to do so once all work is done because it keeps running until you tell it to stop.
 
 ## Sub directories
 
