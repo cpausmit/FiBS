@@ -131,7 +131,7 @@ except getopt.GetoptError as ex:
 hostname = socket.gethostname()
 nentries = 1
 instance = '0'
-debug = 2
+debug = 0
 configFile = ''
 
 # Read new values from the command line
@@ -185,7 +185,8 @@ sys.stdout = open(log,'a')
 while True:
 
     files = pullFilesFromList(task,list,nentries,debug)
-    print(files)
+    if debug>1:
+        print(files)
 
     cmd = 'mkdir -p ' + outerr
     if debug>0:
