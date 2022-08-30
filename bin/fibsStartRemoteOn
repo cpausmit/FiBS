@@ -7,10 +7,15 @@
 
 CLIENT="$1"
 TASK="$2"
+NP=1
 if [ "$CLIENT" == "" ] || [ "$TASK" == "" ]
 then
   echo ""; echo " Please specify client and task as parameter. EXIT!"; echo ""
   exit 1
+fi
+if [ ".$3" != "" ]
+then
+  NP=$2
 fi
 
 # test whether there is already something running
@@ -21,8 +26,15 @@ then
   exit 1
 fi 
 
-# start up the engine on the remote machine
-echo " STARTING the FiBS engine with task $TASK for $USER on $CLIENT"
-ssh -x $CLIENT "nohup fibsStartEngine $TASK > $FIBS_LOGS/${TASK}-${CLIENT}.log 2>&1 &"
+# start up the engines on the remote machine
+i=0
+while [ $i -ne $NP ]
+do
+  i=$(($i+1))
+  echo " STARTING the FiBS engine ($i) with task $TASK for $USER on $CLIENT"
+  echo "\
+  nohup fibsStartEngine $TASK $i > $FIBS_LOGS/${TASK}-${HOSTNAME}_${i}.log 2>&1 &"
+  ssh -x $CLIENT "nohup fibsStartEngine $TASK $i > $FIBS_LOGS/${TASK}-${CLIENT}_${i}.log 2>&1 &"
+done
 
 exit $?
