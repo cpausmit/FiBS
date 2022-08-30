@@ -2,7 +2,7 @@
 
 FiBS is very simple batch system which uses a locking mechanism as batch manager and engines that freely request a lock to pull there work of a list which is stored in a file. The task the batch manager executes has a configuration file and an initialization file and will be excuted using the entries in the provided list.
 
-This system is extremely simple but of course has many limitations. It is ideal to execute a large number of parallel tasks that do not require a lot of resources and can run in parallel on machines that are busy with more heavy computing. Transfering files is an ideal task for FiBS.
+This system is extremely simple but of course has many limitations. It is ideal to execute a large number of parallel tasks that do not require a lot of resources and can run in parallel on machines that are busy with more heavy computing. Transferring files is an ideal task for FiBS.
 
 ## Prerequisits
 
