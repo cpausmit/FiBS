@@ -60,6 +60,8 @@ Now prepare a list of tasks inside the FIBS_WORK name it fake.list, and inside i
     argument-3
     argument-4
 
+One more issue to address: The lock required to synchronize the various engines is implemented in form of a database (DB) table where a lock is created. The access to the database is determined in the $HOME/.mysql/my.cnf file. Ask the package DB administrator for help.
+
 Now start the batch system to process those tasks:
 
     fibsService.py start fake
@@ -73,8 +75,6 @@ Check the status with:
 If at any point some of the commands do not work check the environment, and make sure the setup was in the .bashrc file and where sourced.
 
 Make sure that you do not need to type in any password to access any of the workers
-
-If there are any problems relateing to a mySQL file ask a administrator for access to the file
 
 You can also stop the batch system. It is recommened to do so once all work is done because it keeps running until you tell it to stop.
 
