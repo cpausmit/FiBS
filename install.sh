@@ -6,7 +6,7 @@ touch setup.sh
 echo "# CAREFUL THIS FILE IS GENERATED AT INSTALL"                  >> setup.sh
 echo "export FIBS_BASE=`pwd`"                                       >> setup.sh
 echo "export FIBS_CFGS=\$FIBS_BASE/config"                          >> setup.sh
-echo "export FIBS_TASK=\$FiBS_BASE/task"                            >> setup.sh
+echo "export FIBS_TASK=\$FIBS_BASE/task"                            >> setup.sh
 
 echo "export FIBS_WORK=\$HOME/work/fibs"                            >> setup.sh
 echo "export FIBS_LOGS=\$HOME/logs/fibs"                            >> setup.sh

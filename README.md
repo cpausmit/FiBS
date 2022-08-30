@@ -6,6 +6,8 @@ This system is extremely simple but of course has many limitations. It is ideal 
 
 ## Prerequisits
 
+Install pdsh as root
+
     yum install -y pdsh
 
 ## Installation
@@ -14,16 +16,13 @@ To download the software use git clone:
 
     git clone https://github.com/cpausmit/FiBS
 
-install pdsh as root
-
-	yum install pdsh
-
 ## Running a simple task: fake
 
 Edit the setup.sh file to your needs. and make sure to source it so the environment is set. You will have to add this to your .bashrc file so that FiBS is always setup when login in. 
 
     emacs -nw ./FiBS/setup.sh
     source    ./FiBS/setup.sh
+    emacs -nw ~/.bashrc
 
 
 Make directories named $FIBS_WORK and $FIBS_LOGS which are defined in the setup.sh script:
@@ -41,14 +40,14 @@ Make an executable task, and a configure executable. In the task write what you 
     outerr = fake
 
     [workers]
-    list = T3BTCH001.MIT.EDU T3BTCH002.MIT.EDU T3BTCH003.MIT.EDU
+    list = submit00.mit.edu submit01.mit.edu
     nprocesses = 2
 
 Once everything is written run one test task to see whther it works:
 
      ./FiBS/task.fake.py fake-argument
 
-Now we prepare a list of tasks fake.list, which could look like this:
+Now prepare a list of tasks inside the FIBS_WORK name it fake.list, and inside it could look like this:
 
     argument-1
     argument-2
@@ -63,6 +62,12 @@ Check the status with:
 
     fibeService.py status fake
     
+## Trouble Shooting
+
+if at any point some of the commands do not work check the environment, and make sure the setup was in the .bashrc file and where sourced
+
+Make sure that you do not need to type in any password to access any of the workers
+
 You can also stop the batch system. IT is recommened to do so once all work is done because it keeps running until you tell it to stop.
 
 ## Sub directories
