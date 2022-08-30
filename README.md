@@ -72,6 +72,8 @@ If at any point some of the commands do not work check the environment, and make
 
 Make sure that you do not need to type in any password to access any of the workers
 
+If there are any problems relateing to a mySQL file ask a administrator for access to the file
+
 You can also stop the batch system. It is recommened to do so once all work is done because it keeps running until you tell it to stop.
 
 ## Sub directories
@@ -90,3 +92,4 @@ A sub-directory with code for running python scripts for tasks
 
 ### ./tasks
 
+A subdirectory full of executable tasks to run
