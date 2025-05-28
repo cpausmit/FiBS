@@ -8,7 +8,8 @@ import os,re,subprocess,sys,datetime
 import MySQLdb
 import rex
 
-Db = MySQLdb.connect(read_default_file="/etc/my.cnf",read_default_group="mysql",db="Bambu")
+Db = MySQLdb.connect(read_default_file="/home/tier3/cmsprod/.my.cnf",read_default_group="mysql",db="Bambu")
+#Db = MySQLdb.connect(read_default_file="/etc/my.cnf",read_default_group="mysql",db="Bambu")
 Cursor = Db.cursor()
 
 usage = "\n   usage:  makeCatalog.py  <mitcfg> <version> <dataset> \n"

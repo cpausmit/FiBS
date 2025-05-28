@@ -7,7 +7,7 @@
 import os,sys,re,socket,datetime,time
 
 STARTPOINT = "gsiftp://se01.cmsaf.mit.edu:2811/cms"
-ENDPOINT = "gsiftp://tapesrmcms.nese.rc.fas.harvard.edu:2811/cms/test"
+ENDPOINT = "gsiftp://tapesrmcms.nese.rc.fas.harvard.edu:2811/cms"
 
 #---------------------------------------------------------------------------------------------------
 #  H E L P E R S 
@@ -88,9 +88,9 @@ exeCmd("voms-proxy-init --valid 168:00 -voms cms",debug)
 exeCmd("voms-proxy-info -all",debug)
 
 # upload
-uploadFile(fullFile,debug)
+rc = uploadFile(fullFile,debug)
 
 # make sure to cleanup
 exeCmd("rm -f /tmp/%s"%(baseFile))
 
-sys.exit(0)
+sys.exit(rc)

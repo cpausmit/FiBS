@@ -46,18 +46,10 @@ firstTime = True
 nLoop = 0
 while nLoop<4:
 
-    # if firstTime:
-    #     fileH = open('/home/cmsprod/cms/logs/fibs/fake.log','w')
-    # else:
-    #     fileH = open('/home/cmsprod/cms/logs/fibs/fake.log','a')
-    # showSetup(firstTime,fileH)
-    # fileH.close()
-    # firstTime = False
-
     showSetupStd()
     time.sleep(4)
 
     nLoop +=1
 
 
-sys.exit(0)
+sys.exit(21)

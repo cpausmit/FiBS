@@ -14,7 +14,7 @@ def getJobsFromOutput(out):
         line = line[:-1]
         f = line.split(' ')
         if len(f) >= 3:
-            size = f[1]
+            size = int(f[1])
             job = f[2]
             job = ".".join(job.split(".")[:-1])
             job = job.replace("./","")
@@ -23,7 +23,7 @@ def getJobsFromOutput(out):
                     jobSizes[job] = size
             else:
                 jobSizes[job] = size
-            #print ' job: %s'%(job)
+            #print(' job: %s'%(job))
     
     return jobSizes
 
@@ -33,10 +33,10 @@ logs = os.environ.get('FIBS_LOGS','')
 minutes = "30"
 
 if base == '':
-    print ' ERROR - FIBS_BASE is not defined. EXIT '
+    print(' ERROR - FIBS_BASE is not defined. EXIT ')
 
 if len(sys.argv) < 2:
-    print ' ERROR - please specify task '
+    print(' ERROR - please specify task ')
 task = sys.argv[1]
 
 if len(sys.argv) > 2:
@@ -53,4 +53,4 @@ jobSizes = getJobsFromOutput(out)
 for job in jobSizes:
     size = jobSizes[job]
     if size > 1:
-        print " %s/%s/%s.{err,out}"%(logs,task,job)
+        print(" %s/%s/%s.{err,out}"%(logs,task,job))

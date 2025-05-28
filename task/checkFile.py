@@ -11,17 +11,12 @@
 # The script relies on the catalogFile.sh script to be in its path. This script is responsible to
 # perfrom the various tests on the file.
 #===================================================================================================
-import os,sys,subprocess,time,json
-import requests
+import os,sys,socket,subprocess
+import datetime
 import MySQLdb
 import rex
 
-## Prefix = os.getenv('KRAKEN_TMP_PREFIX')
-Prefix = "tmp_0_"
-Db = MySQLdb.connect(read_default_file="/etc/my.cnf",read_default_group="mysql",db="Bambu")
-Cursor = Db.cursor()
-
-DYNAMO_HOST = 't3serv009.mit.edu'
+Prefix = os.getenv('KRAKEN_TMP_PREFIX')
 CERT = '/tmp/x509up_u%d' % os.getuid()
 
 usage = "\n   usage:  checkFile.py  <file> \n"
@@ -29,8 +24,38 @@ usage = "\n   usage:  checkFile.py  <file> \n"
 #===================================================================================================
 #  H E L P E R S
 #===================================================================================================
-def makeLfn(finalFile):
-    return "/"+"/".join(finalFile.split("/")[2:])
+def isProxyValid():
+    # extract the number of events in a given catalog entry
+    cmd = 'voms-proxy-info -timeleft'
+    p = subprocess.Popen(cmd.split(" "),stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+    (out, err) = p.communicate()
+    rc = p.returncode
+
+    nsec = 0
+    lines = out.decode().split("\n")
+    for line in lines:
+        if line != '':
+            nsec = int(line)
+
+    return (nsec >= 10)
+
+def showSetup(status):
+    if   status == 'start':
+        print("\n=-=-=-= Show who and where we are =-=-=-=\n")
+        print(" Script:    %s"%(os.path.basename(__file__)))
+        print(" Arguments: %s"%(" ".join(sys.argv[1:])))
+        print(" ")
+        print(" user executing: " + os.getenv('USER','unknown user'))
+        print(" running on    : %s"%(socket.gethostname()))
+        print(" running in    : %s"%(os.getcwd()))
+        print(" start time    : %s"%(str(datetime.datetime.now())))
+    elif status == 'end':
+        print(" end   time    : %s"%(str(datetime.datetime.now())))
+    else:
+        print(" error time    : %s (%s)"%(str(datetime.datetime.now()),str(status)))
+    print(" ")
+
+    return
 
 def catalogFile(file):
     # perfrom cataloging operation on one file (return the entry)
@@ -42,23 +67,23 @@ def catalogFile(file):
     rc = p.returncode
 
     entry = ''
-    lines = out.split("\n")
+    lines = out.decode().split("\n")
     for line in lines:
         if 'XX-CATALOG-XX 0000' in line:
             entry = line.replace('XX-CATALOG-XX 0000 ','')
 
-    print '\n o-o-o OUT o-o-o \n%s\n\n o-o-o ERR (%d) o-o-o \n%s'%(out,rc,err)
+    print('\n o-o-o OUT o-o-o \n%s\n\n o-o-o ERR (%d) o-o-o \n%s'%(out.decode(),rc,err.decode()))
 
-    return (out,err,entry)
+    return (out.decode(),err.decode(),entry)
 
 def findFileSize(file):
 
     fileSize = 0
     cmd = "t2tools.py --action ls --source " +  file
-    print ' LIST: ' + cmd
+    print(' LIST: ' + cmd)
     (rc,out,err) = remoteX.executeLocalAction(cmd)
-    fileSize = long((out.split(" ")[0]).split(":")[1])
-    print ' SIZE: %ld'%fileSize 
+    fileSize = int((out.split(" ")[0]).split(":")[1])
+    print(' SIZE: %ld'%fileSize)
 
     return fileSize
 
@@ -90,6 +115,8 @@ def getFileInfo(file):
     requestId = -1
     datasetId = -1
     blockName = ""
+    nEventsLfn = -1
+    blockName = ""
 
     f = file.split('/')
 
@@ -110,7 +137,7 @@ def getFileInfo(file):
     # decode the dataset
     f = dataset.split('+')
     if len(f) < 3:
-        print " ERROR - dataset name not correctly formed: " + dataset
+        print(" ERROR - dataset name not correctly formed: " + dataset)
         sys.exit(0)
     process = f[0]
     setup = f[1]
@@ -125,14 +152,14 @@ def getFileInfo(file):
         + " and RequestConfig = '%s' and RequestVersion = '%s'"%(mitcfg,version) \
         + " and Lfns.FileName = '%s' "%(getName(file))
 
-    print ' SQL - ' + sql
+    print(' SQL - ' + sql)
 
     try:
         # Execute the SQL command
         Cursor.execute(sql)
         results = Cursor.fetchall()
     except:
-        print 'ERROR(%s) - could not find request id.'%(sql)
+        print('ERROR(%s) - could not find request id.'%(sql))
 
     # found the request Id
     for row in results:
@@ -141,6 +168,8 @@ def getFileInfo(file):
         blockName = row[2]
         nEventsLfn = int(row[3])
 
+        print(row)
+        
     return (requestId, datasetId, blockName, nEventsLfn, mitcfg, version, dataset)
 
 def numberOfEventsInEntry(entry):
@@ -157,76 +186,95 @@ def makeDatabaseEntry(requestId,fileName,nEvents,fileSize):
 
     sql = "insert into Files(RequestId,FileName,NEvents,SizeBytes) " \
         + " values(%d,'%s',%d,%ld)"%(requestId,fileName,nEvents,fileSize)
-    print ' SQL: ' + sql
+    print(' SQL: ' + sql)
     try:
         # Execute the SQL command
         Cursor.execute(sql)
     except MySQLdb.IntegrityError as e:
-        if not e[0] == 1062:
-            print 'ERROR(%s) - could not insert new file.'%(sql)
-            raise
+        if e.args[0] == 1062:
+            print(" WARNING -- entry was already in table.")
         else:
-            print " WARNING -- entry was already in table." 
+            print('ERROR(%s) - could not insert new file.'%(sql))
+            raise
 
+def processFile(file):
+    # doing the cataloging here: result is the number of events found in the file
+    (out,err,entry) = catalogFile(file)
+    nEvents = numberOfEventsInEntry(entry)
+    
+    delete = False
+    if "Object is in 'zombie' state" in out or nEvents == -1:
+        delete = True
+        print('\n o=o=o=o File corrupt, schedule deletion. o=o=o=o \n')
+    
+    print(' CATALOG: %d -- %s'%(nEvents,file))
+    
+    # find all relevant infromation about the file
+    fileName = getName(file)
+    (requestId,datasetId,blockName,nEventsLfn,config,version,dataset) = getFileInfo(file)
+    
+    print(' Compare: %d [lfn] and %d [output]'%(nEventsLfn,nEvents))
+        
+    if nEvents == nEventsLfn and nEvents>0:
+        # now move file to final location
+        finalFile = getFinalFile(file)
+        fileSize = findFileSize(file)
+    
+        if Prefix in file:
+            cmd = "t2tools.py --action mv --source " +  file + " --target " + finalFile
+            print(' MOVE: ' + cmd)
+            (rc,out,err) = remoteX.executeLocalAction(cmd)
+            if rc != 0:
+                print(' ERROR -- move failed: %d\n  - out:\n %s\n  - err:\n %s'%(rc,out,err))
+                if ': File exists' in out:
+                    print(' REASON -- file exists: %s'%(finalFile))
+                    cmd = "t2tools.py --action rm --source " +  file
+                    print(' REMOVE: ' + cmd)
+                    (rc,out,err) = remoteX.executeLocalAction(cmd)
+                    
+        
+        # add a new catalog entry
+        makeDatabaseEntry(requestId,fileName,nEvents,fileSize)
+        showSetup('end')
+    
+    else:
+        print(' ERROR: event counts disagree or not positive (LFN %d,File %d). EXIT!'%\
+              (nEventsLfn,nEvents))
+    
+        if delete:
+            cmd = "t2tools.py --action rm --source " +  file
+            #print(' REMOVING FILE: ' + cmd,file=sys.stderr)
+            print(' REMOVING FILE: ' + cmd)
+            (rc,out,err) = remoteX.executeLocalAction(cmd)
+        showSetup(-1)
+        showSetup('end')
+
+    return
+    
 #===================================================================================================
 #  M A I N
 #===================================================================================================
 # make sure command line is complete
 if len(sys.argv) < 1:
-    print " ERROR -- " + usage
+    print(" ERROR -- " + usage)
     sys.exit(1)
 
+if not isProxyValid():
+    print(" ERROR -- no valid proxy !!")
+    sys.exit(1)
+    
+# make announcement
+showSetup('start')
+    
 # command line variables
-file = sys.argv[1]
-print " INFO - checkFile.py %s"%(file)     
-            
-# doing the cataloging here: result is the number of events found in the file
-(out,err,entry) = catalogFile(file)
-nEvents = numberOfEventsInEntry(entry)
+files = sys.argv[1:]
 
-delete = False
-if "Object is in 'zombie' state" in out or nEvents == -1:
-    delete = True
-    print '\n o=o=o=o File corrupt, schedule deletion. o=o=o=o \n'
-
-print ' CATALOG: %d -- %s'%(nEvents,file)
-
-# find all relevant infromation about the file
-fileName = getName(file)
-(requestId,datasetId,blockName,nEventsLfn,config,version,dataset) = getFileInfo(file)
-
-print ' Compare: %d [lfn] and %d [output]'%(nEventsLfn,nEvents)
-
+# Make sure database is there
+Db = MySQLdb.connect(read_default_file="/home/tier3/cmsprod/.my.cnf",read_default_group="mysql",db="Bambu")
+Cursor = Db.cursor()
 # make sure we can work remotely
 remoteX = rex.Rex('none','none')
 
-if nEvents == nEventsLfn and nEvents>0:
-    # now move file to final location
-    finalFile = getFinalFile(file)
-    fileSize = findFileSize(file)
-    
-
-    if Prefix in file:
-        cmd = "t2tools.py --action mv --source " +  file + " --target " + finalFile
-        print ' MOVE: ' + cmd
-        (rc,out,err) = remoteX.executeLocalAction(cmd)
-        if rc != 0:
-            print ' ERROR -- move failed: %d\n  - out:\n %s\n  - err:\n %s'%(rc,out,err)
-            if ': File exists' in out:
-                print ' REASON -- file exists: %s'%(finalFile)
-                cmd = "t2tools.py --action rm --source " +  file
-                print ' REMOVE: ' + cmd
-                (rc,out,err) = remoteX.executeLocalAction(cmd)
-                
-    
-    # add a new catalog entry
-    makeDatabaseEntry(requestId,fileName,nEvents,fileSize)
-
-else:
-    print ' ERROR: event counts disagree or not positive (LFN %d,File %d). EXIT!'%\
-        (nEventsLfn,nEvents)
-
-    if delete:
-        cmd = "t2tools.py --action rm --source " +  file
-        print ' REMOVE: ' + cmd
-        (rc,out,err) = remoteX.executeLocalAction(cmd)
+for file in files:
+    print(" INFO - checkFile.py %s"%(file))
+    processFile(file)

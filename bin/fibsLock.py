@@ -6,8 +6,12 @@
 #                                                                        v0 - April 1, 2016 - C.Paus
 #---------------------------------------------------------------------------------------------------
 import os,sys,getopt,re,time,socket
-import configparser as ConfigParser
 import dblock
+try: # Python 2 only:
+    import ConfigParser as ConfigParser
+except ImportError:
+    # Python 2 and 3 (after ``pip install configparser``)
+    import configparser as ConfigParser
 
 #===================================================================================================
 #  H E L P E R S

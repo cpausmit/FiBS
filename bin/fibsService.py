@@ -37,6 +37,9 @@ if len(sys.argv) != 3:
 service = sys.argv[1]
 task = sys.argv[2]
 configFile = os.environ.get('FIBS_CFGS') + '/' + task + '.cfg' 
+if not os.path.exists(configFile):
+    print(f"\n ERROR: config file ({configFile}) does not exist.\n\n{usage}")
+    sys.exit(1)
 
 print(' Config: ' + configFile)
 

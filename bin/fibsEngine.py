@@ -6,8 +6,13 @@
 #
 #                                                                        v0 - April 1, 2016 - C.Paus
 #---------------------------------------------------------------------------------------------------
-import os,sys,getopt,re,ConfigParser,time,socket
+import os,sys,getopt,re,time,socket
 import dblock
+
+try:
+    import ConfigParser
+except:
+    import configparser
 
 #===================================================================================================
 #  H E L P E R S
@@ -18,7 +23,7 @@ def testLocalSetup(debug=0):
     # See whether we are setup
     base = os.environ.get('FIBS_BASE')
     if base == '':
-        print('\n fibsEngine: ERROR -- FiBS is not setup FIBS_BASE environment not set.\n')
+        print('\n fibsEngine: ERROR -- FiBS is not setup. FIBS_BASE environment not set.\n')
         sys.exit(1)
 
     return
@@ -49,6 +54,8 @@ def readList(listFile,debug):
 
     if debug>0:
         print(' fibsEngine: readList -- Found %d files.'%(len(fileList)))
+    if debug>1:
+        print(' fibsEngine: file list')
         print(fileList)
 
     return fileList
@@ -63,6 +70,8 @@ def writeList(listFile,fileList,debug):
 
     if debug>0:
         print(' fibsEngine: writeList -- Found %d files.'%(len(fileList)))
+    if debug>1:
+        print(' fibsEngine: file list')
         print(fileList)
 
     return fileList
@@ -114,7 +123,7 @@ usage += "                      [ --help ]\n"
 valid = ['configFile=','instance=','debug=','help']
 try:
     opts, args = getopt.getopt(sys.argv[1:], "", valid)
-except getopt.GetoptError, ex:
+except getopt.GetoptError as ex:
     print(usage)
     print(str(ex))
     sys.exit(1)
@@ -128,7 +137,7 @@ except getopt.GetoptError, ex:
 hostname = socket.gethostname()
 nentries = 1
 instance = '0'
-debug = 2
+debug = 0
 configFile = ''
 
 # Read new values from the command line
@@ -146,11 +155,17 @@ for opt, arg in opts:
 
 # reading detailed configurations
 #--------------------------------
-config = ConfigParser.RawConfigParser()
+try:
+    config = ConfigParser.RawConfigParser()
+except:
+    config = configparser.ConfigParser()
+
 config.read(configFile)
 task = config.get('general','task')
 if config.has_option('general','nentries'):
     nentries = int(config.get('general','nentries'))
+if config.has_option('general','debug'):
+    debug = int(config.get('general','debug'))
 list = config.get('general','list')
 
 # get our environment parameters as needed
@@ -182,7 +197,9 @@ sys.stdout = open(log,'a')
 while True:
 
     files = pullFilesFromList(task,list,nentries,debug)
-    print(files)
+    if debug>1:
+        print(" fibsEngine: list files")
+        print(files)
 
     cmd = 'mkdir -p ' + outerr
     if debug>0:
@@ -199,21 +216,28 @@ while True:
         baseFile = baseFile.replace(' ','%')
 
         # execute our task
-        cmd = taskdir + '/' + task + ' ' + file \
-            + ' 1> ' + outerr + '/' + baseFile + '-' + hostname + '_' + instance + '.out' \
-            + ' 2> ' + outerr + '/' + baseFile + '-' + hostname + '_' + instance + '.err'
+        out = outerr + '/' + baseFile + '-' + hostname + '_' + instance + '.out'
+        err = outerr + '/' + baseFile + '-' + hostname + '_' + instance + '.err'
+
+        cmd = taskdir + '/' + task + ' ' + file + ' 1> ' + out + ' 2> ' + err
         
         if file != '':
             print(' fibsEngine: next task: %s'%(cmd))
-            os.system(cmd)
+            rc = int(os.system(cmd)) >> 8;
+            if rc!=0:
+                print(" fibsEngine: ERROR encountered: %d on %s"%(rc,file))
+                os.system("mkdir -p %s/errs/%d"%(outerr,rc))
+                os.system("mv %s %s %s/errs/%d"%(out,err,outerr,rc))
+            else:
+                print(" fibsEngine: SUCCESS on %s"%(file))
         else:
             print(' fibsEngine: there is no work here to be done. (sleep 5)')
             time.sleep(5)
 
     # when the list is empty take some time to ask for more
     if len(files) == 0:
-        if debug > 1:
-            print('\n fibsEngine: List is empty: waiting for 10 secs.')
-        time.sleep(10)
+        if debug > 0:
+            print('\n fibsEngine: List is empty: waiting for 20 secs.')
+        time.sleep(20)
   
 sys.exit(0)
