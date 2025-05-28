@@ -16,9 +16,9 @@ pid=`ssh -x $CLIENT \
 
 if [ "$pid" == "" ]
 then
-  echo " No more engine for $USER on $CLIENT"
+  echo " No more engine for $USER:$TASK on $CLIENT"
 else
-  echo " Kill Engine Pid $pid for $USER on $CLIENT"
+  echo " Kill Engine Pid $pid for $USER:$TASK on $CLIENT"
   ssh -x $CLIENT "kill $pid"
 fi
 
@@ -28,11 +28,11 @@ pids=`ssh -x $CLIENT \
 
 if [ "$pids" == "" ]
 then
-  echo " No more task activity ($TASK) for $USER on $CLIENT"
+  echo " No more task activity for $USER:$TASK on $CLIENT"
 else
   for pid in $pids
   do
-    echo " Kill Task ($TASK) Pid $pid for $USER on $CLIENT"
+    echo " Kill Pid $pid for $USER:$TASK on $CLIENT"
     ssh -x $CLIENT "kill $pid"
   done
 fi

@@ -7,10 +7,9 @@
 #---------------------------------------------------------------------------------------------------
 import os,sys,getopt,re,time,socket
 import dblock
-try: # Python 2 only:
+try:
     import ConfigParser as ConfigParser
 except ImportError:
-    # Python 2 and 3 (after ``pip install configparser``)
     import configparser as ConfigParser
 
 #===================================================================================================

@@ -4,10 +4,9 @@
 #
 #---------------------------------------------------------------------------------------------------
 import os,sys,re
-try: # Python 2 only:
+try:
     import ConfigParser as ConfigParser
 except ImportError:
-    # Python 2 and 3 (after ``pip install configparser``)
     import configparser as ConfigParser
 
 DEBUG = 0
@@ -79,6 +78,7 @@ cmd = "pdsh -R ssh -w %s %s %s %d | sort"%(workers_list,script_local,task,nproce
 if DEBUG > 0:
     print(cmd)
 rc = os.system(cmd)
+#rc = 1
 
 # go one-by-one in case of failure
 if rc != 0:

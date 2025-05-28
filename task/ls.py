@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #---------------------------------------------------------------------------------------------------
-# Fake some activity and produce output.
+# Make a user directory listing and produce output.
 #
 #                                                                             Ch.Paus (Sep 30, 2015)
 #---------------------------------------------------------------------------------------------------
@@ -12,8 +12,8 @@ import os,sys,re,socket,datetime,time
 def showSetup(firstTime,fHandle):
     if firstTime:
         fileH.write("\n=-=-=-= Show who and where we are =-=-=-=\n\n")
-        fileH.write(" Script:    %s\n"%(os.path.basename(__file__)))
-        fileH.write(" Arguments: %s\n"%(" ".join(sys.argv[1:])))
+        fileH.write(" Script        : %s\n"%(os.path.basename(__file__)))
+        fileH.write(" Arguments     : %s\n"%(" ".join(sys.argv[1:])))
         fileH.write(" \n")
         fileH.write(" start time    : %s\n"%(str(datetime.datetime.now())))
     else:
@@ -31,7 +31,7 @@ def showSetupStd():
     print(" user executing: " + os.getenv('USER','unknown user'))
     print(" running on    : %s"%(socket.gethostname()))
     print(" executing in  : %s"%(os.getcwd()))
-    print(" arguments     : %s"%(" ".join(sys.argv[1:])))
+    print(" user list     : %s"%(" ".join(sys.argv[1:])))
     print(" time now      : %s"%(str(datetime.datetime.now())))
     print(" ")
 
@@ -41,15 +41,11 @@ def showSetupStd():
 #  M A I N
 #---------------------------------------------------------------------------------------------------
 
+username = sys.argv[1]
+
 # make announcement
-firstTime = True
-nLoop = 0
-while nLoop<4:
+#showSetupStd()
+cmd = 'echo " listing /data/submit/%s:"; ls -l /data/submit/%s'%(username,username)
+os.system(cmd)
 
-    showSetupStd()
-    time.sleep(4)
-
-    nLoop +=1
-
-
-sys.exit(21)
+sys.exit(0)

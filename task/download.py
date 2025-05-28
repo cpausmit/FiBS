@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 #---------------------------------------------------------------------------------------------------
 # Download exactly one file from a given xrootd location to MIT T3.
-#
 #                                                                             Ch.Paus (Mar 25, 2021)
 #---------------------------------------------------------------------------------------------------
 import os,sys,re,socket,datetime,time
@@ -10,7 +9,15 @@ import os,sys,re,socket,datetime,time
 T3_BASE = "/ceph/submit/data/group/cms"
 #T3_BASE = "/mnt/hadoop/cms"
 #T3_BASE= "root://t3serv017.mit.edu/"
+OVERWRITE = True
 
+# define source and target
+SOURCE_SERVER = "t3serv017.mit.edu"
+TARGET_SERVER = "xrootd18.cmsaf.mit.edu"
+#---
+SOURCE = "/data/submit/cms"
+#SOURCE = "root://%s/"%(SOURCE_SERVER)
+TARGET = "root://%s/"%(TARGET_SERVER)
 #---------------------------------------------------------------------------------------------------
 #  H E L P E R S 
 #---------------------------------------------------------------------------------------------------
@@ -28,7 +35,7 @@ def showSetup(status):
     elif status == 'end':
         print(" end   time    : %s"%(str(datetime.datetime.now())))
     else:
-        print(" error time    : %s (%s)"%(str(datetime.datetime.now()),str(status)))
+        print(" now   time    : %s (%s)"%(str(datetime.datetime.now()),str(status)))
     print(" ")
 
     return
@@ -37,14 +44,14 @@ def exeCmd(cmd,debug=0):
     # execute a given command and show what is going on
 
     rc = 0
-
     if debug>1:
         print(' =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=')
     if debug>0:
         print(' =Execute:  %s'%(cmd))
     rc = os.system(cmd) ##print(' !! DISABLED EXECUTION !! ')
     if debug>1:
-        print( ' =E=N=D=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n')
+        print(' =E=N=D=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n')
+
     return rc
 
 def extractLfn(fullFile,debug=0):
@@ -72,10 +79,11 @@ def downloadFile(file_xrootd,lfn,debug=0):
 def removeRemainder(lfn,debug=0):
     # remove remainder from failed download
 
-    cmd = "rm %s%s"%(T3_BASE,lfn) 
+    cmd = "xrdfs %s rm %s"%(TARGET_SERVER,lfn) 
+#    cmd = "rm %s%s >& /dev/null"%(TARGET,lfn) 
     rc = exeCmd(cmd,debug)
     if rc == 0:
-        print(" removed remainder: %s%s."%(T3_BASE,lfn))
+        print(" removed remainder: %s%s."%(TARGET,lfn))
     else:
         print(" removing remainder FAILED (rc=%s): %s."%(rc,lfn))
 
@@ -83,8 +91,11 @@ def removeRemainder(lfn,debug=0):
 
 def existFile(lfn,debug=0):
     # check if file exists already
+    if OVERWRITE: # force overwrite
+        return 1
 
-    cmd = "ls -l %s%s >& /dev/null"%(T3_BASE,lfn) 
+    cmd = "xrdfs %s ls %s >& /dev/null"%(TARGET_SERVER,lfn) 
+#    cmd = "ls -l %s%s >& /dev/null"%(TARGET,lfn) 
     rc = exeCmd(cmd,debug)
     if rc == 0:
         print(" file listed successfully: %s."%(lfn))
@@ -92,14 +103,14 @@ def existFile(lfn,debug=0):
         print(" file listing FAILED (rc=%s) so we need to download: %s."%(rc,lfn))
 
         dir = "/".join(lfn.split("/")[:-1])
-        print("DIR: %s%s"%(T3_BASE,dir))
+        print("DIR: %s%s"%(TARGET,dir))
     
-        cmd = "ls -l %s%s >& /dev/null"%(T3_BASE,dir) 
+        cmd = "ls -l %s%s >& /dev/null"%(TARGET,dir) 
         tmprc = exeCmd(cmd,debug)
         if tmprc == 0:
             print(" directory exists: %s."%(lfn))
         else:
-            cmd = "mkdir -p %s%s >& /dev/null"%(T3_BASE,dir) 
+            cmd = "mkdir -p %s%s >& /dev/null"%(TARGET,dir) 
             tmprc = exeCmd(cmd,debug)
             print(" directory created (RC=%d): %s."%(int(tmprc),lfn))
         
@@ -129,11 +140,11 @@ lfn = extractLfn(fullFile,debug)
 exeCmd("voms-proxy-init --valid 168:00 -voms cms",debug)
 exeCmd("voms-proxy-info -all",debug)
 
-# download the file to local
+# does the file exist already?
 rc = existFile(lfn,debug)
 if rc == 0:
     print("\n Our work is done, file exists already.\nEXIT\n")
-    showSetup('end')
+    showSetup(rc)
     sys.exit(rc)
 
 # download the file to local
