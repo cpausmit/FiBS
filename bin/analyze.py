@@ -175,6 +175,26 @@ def plot(record,min_t,max_t,opt='ALL',name='tmp'):
         #plt.text(0.01,0.99,name,ha='right',va='top')
         plt.legend(loc='upper left')
         plt.show()
+    elif opt == "duration":
+        # show the duration plot for interactive use
+        delta_ts = []
+        for key in record:
+            f = record[key].split(':')
+            status = f[0]
+            stime = int(f[1])
+            delta_t = int(f[2])-int(f[1])
+            if stime >= min_t and stime <= max_t:
+                delta_ts.append(delta_t)
+        if options.debug>0:
+            print(f" Total entries: {len(delta_ts)} in ({min_t}:{max_t})")
+        plt.hist(delta_ts, nbins, histtype='step',linewidth=1.0)
+        plt.legend(loc='upper left')
+        plt.xlabel(f'duration [sec] ({name})', fontsize=18)
+        plt.ylabel('number of executions / interval', fontsize=18)
+        plt.show()
+        # save plot for later viewing
+        plt.savefig(f"{options.task}_duration_{name}.png",bbox_inches='tight',dpi=400)
+        plt.close()
     else:
         times = []
         for key in record:
@@ -244,6 +264,7 @@ def plotRecord(record):
     plot(RECORD,min_t,max_t,'-2')
     plot(RECORD,min_t,max_t,'-3')
     plot(RECORD,min_t,max_t,'save','2hr')
+    plot(RECORD,min_t,max_t,'duration','2hr')
     
     # last 4 hours
     min_t = max_t - (4 * 3600)
