@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #==================================================================================================
 #
-# Script to remove all downloading log files and create a record of what happened when.
+# Script to remove all task log files and create a record of what happened when.
 #
 #==================================================================================================
 import os,sys,subprocess
@@ -19,15 +19,13 @@ PATTERN_B = '%a %b %d %H:%M:%S %Z %Y'
 
 RECORD = {}
 PLOT_FIRST = True
-
-TASK = 'download'
 DEBUG = 0
 
 
 def appendRecord(record):
     # append the record to the already existing one
     print(" Appending latest record to existing file (%d)"%(len(record)))
-    with open(f"{options.base}/{TASK}Activity.db","a") as f:
+    with open(f"{options.base}/{options.task}Activity.db","a") as f:
         for key in record:
             f.write('%s,%s\n'%(key,record[key]))
     return
@@ -61,9 +59,9 @@ def reviewStub(record,options,stub):
     if DEBUG > 0:
         print(" next(%d/%d (all: %d)) --> %s"%(n+1,options.nprocess,len(stubs),stub))
         
-    with open('%s/%s.out'%(options.base,stub),"r") as f:
+    with open('%s/%s.out'%(f"{options.base}/{options.task}",stub),"r") as f:
         data_out = f.read()
-    with open('%s/%s.err'%(options.base,stub),"r") as f:
+    with open('%s/%s.err'%(f"{options.base}/{options.task}",stub),"r") as f:
         data_err = f.read()
 
     # analyze the logs
@@ -111,7 +109,7 @@ def reviewStub(record,options,stub):
                 #etime = int(time.mktime(time.strptime(string,PATTERN)))
             except:
                 etime = int(time.mktime(time.strptime(string,PATTERN_B)))
-        elif ' download worked ' in line:
+        elif f' {options.task} worked ' in line:
             status = 0
 
     # filter out unidentified files
@@ -122,7 +120,7 @@ def reviewStub(record,options,stub):
     key,value = a.summary()
     if key in record:
         print(" ERROR - tried to process this file twice.")
-        saveFiles(options.base,stub,int(options.debug))
+        saveFiles(f"{options.base}/{options.task}",stub,int(options.debug))
         return
     else:
         if a.status == -1:
@@ -130,9 +128,9 @@ def reviewStub(record,options,stub):
             print(" ==== OUTPUT ====\n%s"%data_out)
             print(" ==== ERROR ====\n%s"%data_err)
             a.show()
-            print(' Out file: %s/%s.out'%(options.base,stub))
-            print(' Err file: %s/%s.err'%(options.base,stub))
-            saveFiles(options.base,stub,int(options.debug))
+            print(' Out file: %s/%s.out'%(f"{options.base}/{options.task}",stub))
+            print(' Err file: %s/%s.err'%(f"{options.base}/{options.task}",stub))
+            saveFiles(f"{options.base}/{options.task}",stub,int(options.debug))
             return
         else:
             record[key] = value
@@ -140,7 +138,7 @@ def reviewStub(record,options,stub):
                 a.show()
 
     # make sure not to process again
-    moveFiles(options.base,stub,int(options.debug))
+    moveFiles(f"{options.base}/{options.task}",stub,int(options.debug))
 
     return
 
@@ -170,7 +168,7 @@ def plot(record,min_t,max_t,opt='ALL',name='tmp'):
         plt.legend(loc='upper left')
         plt.xlabel('date/time [%s]'%(name), fontsize=18)
         # save plot for later viewing
-        plt.savefig(f"{TASK}_activity_{name}.png",bbox_inches='tight',dpi=400)
+        plt.savefig(f"{options.task}_activity_{name}.png",bbox_inches='tight',dpi=400)
         plt.close()
     elif opt == "show":
         # show the plot for interactive use
@@ -195,7 +193,7 @@ def plot(record,min_t,max_t,opt='ALL',name='tmp'):
                    
         # define the figure
         if opt == 'ALL':
-            plt.figure(f" {TASK} Activity")
+            plt.figure(f" {options.task} Activity")
     
         if options.debug>1:
             print(" Plotting for option '%s'; n = %d"%(opt,len(times)))
@@ -289,7 +287,7 @@ def readRecord():
     # write the record efficicently to file
 
     record = {}
-    filename = f"{options.base}/{TASK}Activity.db"
+    filename = f"{options.base}/{options.task}Activity.db"
     
     if not os.path.exists(filename):
         print(" No previously existing record found.")
@@ -297,7 +295,7 @@ def readRecord():
         
     print(" Reading record from existing file.")
     
-    with open(f"{options.base}/{TASK}Activity.db","r") as f:
+    with open(f"{options.base}/{options.task}Activity.db","r") as f:
         data = f.read()
     for d in data.split("\n"):
         if ',' not in d:
@@ -318,7 +316,7 @@ def saveFiles(dir,stub,debug):
 def writeRecord(record):
     # write the record efficicently to file
     print(" Saving latest record (%d)."%(len(record)))
-    with open(f"{options.base}/{TASK}Activity.db","w") as f:
+    with open(f"{options.base}/{options.task}Activity.db","w") as f:
         for key in record:
             f.write('%s,%s\n'%(key,record[key]))
     return
@@ -328,7 +326,8 @@ def writeRecord(record):
 #---------------------------------------------------------------------------------------------------
 # define and get all command line arguments
 parser = OptionParser()
-parser.add_option("-b","--base",dest="base",default='/home/tier3/cmsprod/cms/logs/fibs/download',help="base directory")
+parser.add_option("-b","--base",dest="base",default='/home/tier3/cmsprod/cms/logs/fibs',help="base directory")
+parser.add_option("-t","--task",dest="task",default='transfer',help="task to be analyzed")
 parser.add_option("-n","--nprocess",dest="nprocess",default=-1,help="number of files to process")
 parser.add_option("-d","--debug",dest="debug",default=0,help="debug level")
 (options, args) = parser.parse_args()
@@ -337,7 +336,7 @@ options.debug = int(options.debug)
 options.nprocess = int(options.nprocess)
 
 # make a spot to store processed files
-makeCompleteDir(options.base)
+makeCompleteDir(f"{options.base}/{options.task}")
 
 # read the existing record
 RECORD = readRecord()
@@ -346,7 +345,7 @@ RECORD = readRecord()
 plotRecord(RECORD)
 
 # get the job file stubs to analyze
-stubs = findAllJobStubs(options.base,int(options.debug))
+stubs = findAllJobStubs(f"{options.base}/{options.task}",int(options.debug))
 
 # loop through the job stubs
 n = 0
